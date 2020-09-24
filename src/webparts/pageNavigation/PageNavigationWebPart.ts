@@ -8,8 +8,8 @@ import {
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 
 import * as strings from 'PageNavigationWebPartStrings';
-import PageNavigation from './components/PageNavigation';
-import { IPageNavigationProps } from './components/IPageNavigationProps';
+import PageNavigationContainer, { IPageNavigationContainerProps } from './components/PageNavigationContainer';
+import PageNavService from '../../services/PageNavService';
 
 export interface IPageNavigationWebPartProps {
   description: string;
@@ -17,11 +17,18 @@ export interface IPageNavigationWebPartProps {
 
 export default class PageNavigationWebPart extends BaseClientSideWebPart<IPageNavigationWebPartProps> {
 
+  private _pageNavService: PageNavService;
+
+  public async onInit(): Promise<void> {
+    console.log(this.context.pageContext);
+    this._pageNavService = new PageNavService(this.context, '');
+  }
+
   public render(): void {
-    const element: React.ReactElement<IPageNavigationProps> = React.createElement(
-      PageNavigation,
+    const element: React.ReactElement<IPageNavigationContainerProps> = React.createElement(
+      PageNavigationContainer,
       {
-        description: this.properties.description
+        service: this._pageNavService
       }
     );
 
