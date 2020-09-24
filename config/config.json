@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "page-navigation-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/pageNavigation/PageNavigationWebPart.js",
+          "manifest": "./src/webparts/pageNavigation/PageNavigationWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "PageNavigationWebPartStrings": "lib/webparts/pageNavigation/loc/{locale}.js"
+  }
+}
