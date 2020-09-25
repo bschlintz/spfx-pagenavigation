@@ -19,9 +19,9 @@
     "group": { "default": "Other" },
     "title": { "default": "Page Navigation" },
     "description": { "default": "A web part that adds a customizable navigation menu to your page." },
-    "officeFabricIconFontName": "Page",
+    "officeFabricIconFontName": "SecondaryNav",
     "properties": {
-      "description": "Page Navigation"
+      "baseNavTitle": "Page Navigation"
     }
   }]
 }

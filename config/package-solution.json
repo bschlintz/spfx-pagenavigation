@@ -1,11 +1,12 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "page-navigation-client-side-solution",
+    "name": "Page Navigation",
     "id": "840975cd-1c33-4576-a145-8c5e4d6c5b7c",
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
     "isDomainIsolated": false,
+    "skipFeatureDeployment": false,
     "developer": {
       "name": "",
       "websiteUrl": "",

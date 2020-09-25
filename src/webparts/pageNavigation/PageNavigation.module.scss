@@ -1,3 +1,20 @@
+$link_height: 30px;
+
 .pageNavigationContainer {
-  display: block;
+  .navGroupContent {
+    .navLink {
+      height: $link_height;
+    }
+    .navChevronButton {
+      height: $link_height;
+    }
+    .navChevronIcon {
+      height: $link_height;
+      line-height: $link_height;
+    }
+  }
+}
+
+.editPanelContainer {
+  padding: 15px;
 }

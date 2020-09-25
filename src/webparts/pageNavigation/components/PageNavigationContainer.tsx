@@ -1,18 +1,25 @@
 import * as React from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { INavLink, INavLinkGroup, Nav, Spinner } from '@fluentui/react';
+import { INavLink, INavLinkGroup, IRenderGroupHeaderProps, Nav } from '@fluentui/react/lib/Nav';
+import { Spinner } from '@fluentui/react/lib/Spinner';
+import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
 import PageNavService from '../../../services/PageNavService';
 import styles from '../PageNavigation.module.scss';
+import { ActionButton } from '@fluentui/react';
+import EditPanel from './EditPanel';
 
 export interface IPageNavigationContainerProps {
   service: PageNavService;
+  baseNavTitle: string;
 }
 
-const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ service }) => {
+const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ service, baseNavTitle }) => {
   const [ isLoading, setIsLoading ] = useState<boolean>(true);
   const [ pageNavLinks, setPageNavLinks ] = useState<PageNavLink[]>([]);
   const [ pageNavError, setPageNavError ] = useState<Error>(null);
+  const [ userCanEdit, setUserCanEdit ] = useState<boolean>(true);
+  const [ showEditPanel, setShowEditPanel ] = useState<boolean>(false);
 
   const mapLinks = (link: PageNavLink): INavLink => ({
     name: link.title,
@@ -26,12 +33,42 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
     let groups: INavLinkGroup[] = [];
     if (pageNavLinks) {
       groups = [{
-        name: 'Page Navigation',
-        links: pageNavLinks.map(mapLinks)
+        links: pageNavLinks.map(mapLinks),
       }]
     }
     return groups;
   }, [ pageNavLinks ]);
+
+  const onClickEdit = () => {
+    setShowEditPanel(true);
+  }
+
+  const closeEditPanel = () => {
+    setShowEditPanel(false);
+  }
+
+  const renderNav = (): JSX.Element => (
+    <Stack>
+      <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
+        <h2>{baseNavTitle}</h2>
+        {userCanEdit && (
+          <ActionButton
+            onClick={onClickEdit}
+            iconProps={{ iconName: 'Edit' }}
+          >Edit</ActionButton>
+        )}
+      </Stack>
+      <Nav
+        groups={navGroups}
+        styles={{
+          groupContent: styles.navGroupContent,
+          link: styles.navLink,
+          chevronButton: styles.navChevronButton,
+          chevronIcon: styles.navChevronIcon,
+        }}
+      />
+    </Stack>
+  )
 
   useEffect(() => {
     (async () => {
@@ -55,11 +92,12 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
       {isLoading
         ? <Spinner />
         : navGroups
-          ? <Nav groups={navGroups} />
+          ? renderNav()
           : pageNavError
             ? <span>{pageNavError.message}</span>
             : null
         }
+      <EditPanel isOpen={showEditPanel} onDismiss={closeEditPanel} />
     </div>
   );
 }

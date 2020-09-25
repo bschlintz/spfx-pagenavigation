@@ -13,7 +13,7 @@ export default class PageNavService {
   public getNavLinks = async (): Promise<PageNavLink[]> => {
     return [
       { title: 'Top Link A', url: 'https://bing.com', children: [
-        { title: 'Child AA', url: 'https://bing.com', newTab: true, children: [
+        { title: 'Child AA', url: 'https://bing.com', newTab: true, childrenExpanded: false, children: [
           { title: 'Child AAA', url: 'https://bing.com'},
           { title: 'Child AAB', url: 'https://bing.com'},
           { title: 'Child AAC', url: 'https://bing.com'},

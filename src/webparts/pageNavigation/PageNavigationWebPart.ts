@@ -12,7 +12,7 @@ import PageNavigationContainer, { IPageNavigationContainerProps } from './compon
 import PageNavService from '../../services/PageNavService';
 
 export interface IPageNavigationWebPartProps {
-  description: string;
+  baseNavTitle: string;
 }
 
 export default class PageNavigationWebPart extends BaseClientSideWebPart<IPageNavigationWebPartProps> {
@@ -28,7 +28,8 @@ export default class PageNavigationWebPart extends BaseClientSideWebPart<IPageNa
     const element: React.ReactElement<IPageNavigationContainerProps> = React.createElement(
       PageNavigationContainer,
       {
-        service: this._pageNavService
+        service: this._pageNavService,
+        baseNavTitle: this.properties.baseNavTitle
       }
     );
 
@@ -43,6 +44,10 @@ export default class PageNavigationWebPart extends BaseClientSideWebPart<IPageNa
     return Version.parse('1.0');
   }
 
+  protected onPropertyPaneFieldChanged(): void {
+    this.render();
+  }
+
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     return {
       pages: [
@@ -54,8 +59,8 @@ export default class PageNavigationWebPart extends BaseClientSideWebPart<IPageNa
             {
               groupName: strings.BasicGroupName,
               groupFields: [
-                PropertyPaneTextField('description', {
-                  label: strings.DescriptionFieldLabel
+                PropertyPaneTextField('baseNavTitle', {
+                  label: strings.BaseNavTitleFieldLabel
                 })
               ]
             }

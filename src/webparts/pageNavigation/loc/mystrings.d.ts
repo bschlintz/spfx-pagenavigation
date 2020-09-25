@@ -1,7 +1,7 @@
 declare interface IPageNavigationWebPartStrings {
   PropertyPaneDescription: string;
   BasicGroupName: string;
-  DescriptionFieldLabel: string;
+  BaseNavTitleFieldLabel: string;
 }
 
 declare module 'PageNavigationWebPartStrings' {
