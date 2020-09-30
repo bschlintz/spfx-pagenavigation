@@ -13,6 +13,7 @@
   },
   "externals": {},
   "localizedResources": {
-    "PageNavigationWebPartStrings": "lib/webparts/pageNavigation/loc/{locale}.js"
+    "PageNavigationWebPartStrings": "lib/webparts/pageNavigation/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js"
   }
 }

@@ -1,6 +1,9 @@
 $link_height: 30px;
 
 .pageNavigationContainer {
+  .enableNavContainer {
+    background-color: '[theme: neutralLighter, default: #f4f4f4]';
+  }
   .navGroupContent {
     .navLink {
       height: $link_height;

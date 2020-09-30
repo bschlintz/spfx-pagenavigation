@@ -1,103 +1,138 @@
 import * as React from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { INavLink, INavLinkGroup, IRenderGroupHeaderProps, Nav } from '@fluentui/react/lib/Nav';
-import { Spinner } from '@fluentui/react/lib/Spinner';
+import { useEffect, useState } from 'react';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
 import PageNavService from '../../../services/PageNavService';
 import styles from '../PageNavigation.module.scss';
-import { ActionButton } from '@fluentui/react';
+import { PrimaryButton } from '@fluentui/react';
 import EditPanel from './EditPanel';
+import { PageNavItem } from '../../../models/PageNavItem';
+import PageNavigation from './PageNavigation';
 
 export interface IPageNavigationContainerProps {
   service: PageNavService;
-  baseNavTitle: string;
 }
 
-const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ service, baseNavTitle }) => {
-  const [ isLoading, setIsLoading ] = useState<boolean>(true);
-  const [ pageNavLinks, setPageNavLinks ] = useState<PageNavLink[]>([]);
-  const [ pageNavError, setPageNavError ] = useState<Error>(null);
+const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ service }) => {
+  const [ isLoading, setLoading ] = useState<boolean>(true);
+  const [ pageNavItem, setPageNavItem ] = useState<PageNavItem>(null);
+  const [ activeNavLinks, setActiveNavLinks ] = useState<PageNavLink[]>([]);
+  const [ pageNavError, setPageNavError ] = useState<string>(null);
   const [ userCanEdit, setUserCanEdit ] = useState<boolean>(true);
   const [ showEditPanel, setShowEditPanel ] = useState<boolean>(false);
+  const [ isItemMissing, setItemMissing ] = useState<boolean>(false);
+  const navTitle = pageNavItem ? pageNavItem.Title : "";
 
-  const mapLinks = (link: PageNavLink): INavLink => ({
-    name: link.title,
-    url: link.url,
-    target: link.newTab ? '_blank' : '_self',
-    isExpanded: typeof(link.childrenExpanded) === 'undefined' ? true : link.childrenExpanded,
-    links: Array.isArray(link.children) ? link.children.map(mapLinks) : undefined
-  })
-
-  const navGroups = useMemo<INavLinkGroup[]>(() => {
-    let groups: INavLinkGroup[] = [];
-    if (pageNavLinks) {
-      groups = [{
-        links: pageNavLinks.map(mapLinks),
-      }]
+  const load = async (ensureItem: boolean): Promise<void> => {
+    try {
+      setLoading(true);
+      setPageNavError(null);
+      setItemMissing(false);
+      const ensureResult = await service.ensureListItem(ensureItem);
+      switch (ensureResult.type)
+      {
+        case "ItemMissing": setItemMissing(true); break;
+        case "Error": setPageNavError(ensureResult.errorMessage); break;
+        default: {
+          setPageNavItem(ensureResult.item);
+          if (ensureResult.item) setActiveNavLinks(ensureResult.item.NavigationData);
+        }
+      }
     }
-    return groups;
-  }, [ pageNavLinks ]);
+    catch (error) {
+      console.log(`Unable to fetch page navigation links.`, error);
+      setPageNavError(error.message);
+    }
+    finally {
+      setLoading(false);
+    }
+  }
+
+  const save = async (newNavLinks: PageNavLink[]): Promise<void> => {
+    try {
+      setLoading(true);
+      const updateResult = await service.updateListItem({
+        ...pageNavItem,
+        NavigationData: newNavLinks
+      });
+      if (updateResult.type === "Error") {
+        setPageNavError(updateResult.errorMessage);
+      }
+      else if (updateResult.type === "ItemUpdated") {
+        setPageNavItem(updateResult.item);
+        if (updateResult.item) setActiveNavLinks(updateResult.item.NavigationData);
+      }
+      setLoading(false);
+    }
+    catch (error) {
+      console.log(`Unable to update page navigation links.`, error);
+      setPageNavError(error.message);
+    }
+    finally {
+      setLoading(false);
+    }
+  }
 
   const onClickEdit = () => {
     setShowEditPanel(true);
   }
 
-  const closeEditPanel = () => {
+  const onEditPanelSave = async (newNavLinks: PageNavLink[]): Promise<void> => {
+    await save(newNavLinks);
     setShowEditPanel(false);
   }
 
-  const renderNav = (): JSX.Element => (
-    <Stack>
-      <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-        <h2>{baseNavTitle}</h2>
-        {userCanEdit && (
-          <ActionButton
-            onClick={onClickEdit}
-            iconProps={{ iconName: 'Edit' }}
-          >Edit</ActionButton>
-        )}
-      </Stack>
-      <Nav
-        groups={navGroups}
-        styles={{
-          groupContent: styles.navGroupContent,
-          link: styles.navLink,
-          chevronButton: styles.navChevronButton,
-          chevronIcon: styles.navChevronIcon,
-        }}
-      />
-    </Stack>
-  )
+  const onEditPanelCancel = () => {
+    setShowEditPanel(false);
+  }
+
+  const onClickEnable = () => {
+    load(true);
+  }
 
   useEffect(() => {
-    (async () => {
-      try {
-        setIsLoading(true);
-        setPageNavError(null);
-        const result = await service.getNavLinks();
-        setPageNavLinks(result);
-        setIsLoading(false);
-      }
-      catch (error) {
-        console.log(`Unable to fetch page navigation links.`, error);
-        setPageNavError(pageNavError);
-        setIsLoading(false);
-      }
-    })();
+    load(false);
   }, []);
+
+  const renderItemMissing = (): JSX.Element => (
+    <Stack className={styles.enableNavContainer} horizontalAlign="center" verticalAlign="start" tokens={{ childrenGap: 10, padding: 10 }}>
+      {userCanEdit
+        ? <>
+            <PrimaryButton
+              onClick={onClickEnable}
+            >
+              Enable Page Navigation
+            </PrimaryButton>
+            <span>Provision a list item in the 'Page Navigation' list for this page.</span>
+          </>
+        : <></>
+      }
+    </Stack>
+  );
 
   return (
     <div className={ styles.pageNavigationContainer }>
-      {isLoading
-        ? <Spinner />
-        : navGroups
-          ? renderNav()
-          : pageNavError
-            ? <span>{pageNavError.message}</span>
-            : null
-        }
-      <EditPanel isOpen={showEditPanel} onDismiss={closeEditPanel} />
+      {pageNavError && (
+        <Stack>
+          <span>{pageNavError}</span>
+        </Stack>
+      )}
+      {isItemMissing
+        ? renderItemMissing()
+        : <PageNavigation
+            isEditable={userCanEdit}
+            isLoading={isLoading}
+            navLinks={activeNavLinks}
+            navTitle={navTitle}
+            onClickEdit={onClickEdit}
+          />
+      }
+      <EditPanel
+        navLinks={activeNavLinks}
+        isOpen={showEditPanel}
+        onSave={onEditPanelSave}
+        onCancel={onEditPanelCancel}
+      />
     </div>
   );
 }

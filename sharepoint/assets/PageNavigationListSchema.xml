@@ -1,0 +1,31 @@
+<List xmlns:ows="Microsoft SharePoint" Title="Page Navigation" NoCrawl="TRUE" FolderCreation="FALSE" VersioningEnabled="TRUE" Direction="$Resources:Direction;" Url="Lists/PageNavigation" BaseType="0" xmlns="http://schemas.microsoft.com/sharepoint/">
+  <MetaData>
+    <ContentTypes />
+    <Fields>
+      <Field Type="Text" Name="PageUrl" DisplayName="PageUrl" ID="{164c6447-669a-4d87-8650-416fde080ea1}" Required="FALSE" />
+      <Field Type="Note" Name="NavigationData" DisplayName="NavigationData" ID="{a5e0a430-6c11-489c-a32e-b4bb89c08128}" Required="FALSE" />
+    </Fields>
+    <Views>
+      <View BaseViewID="1" Type="HTML" WebPartZoneID="Main" DisplayName="$Resources:core,objectiv_schema_mwsidcamlidC24;" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" SetupPath="pages\viewpage.aspx" ImageUrl="/_layouts/images/generic.png" Url="AllItems.aspx">
+        <XslLink Default="TRUE">main.xsl</XslLink>
+        <JSLink>clienttemplates.js</JSLink>
+        <RowLimit Paged="TRUE">30</RowLimit>
+        <Toolbar Type="Standard" />
+        <ViewFields>
+          <FieldRef Name="Title" />
+          <FieldRef Name="PageUrl" />
+        </ViewFields>
+        <Query>
+          <OrderBy>
+            <FieldRef Name="PageUrl" />
+          </OrderBy>
+        </Query>
+      </View>
+    </Views>
+    <Forms>
+      <Form Type="DisplayForm" Url="DispForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="EditForm" Url="EditForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+      <Form Type="NewForm" Url="NewForm.aspx" SetupPath="pages\form.aspx" WebPartZoneID="Main" />
+    </Forms>
+  </MetaData>
+</List>

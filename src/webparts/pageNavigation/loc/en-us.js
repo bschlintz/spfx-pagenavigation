@@ -1,7 +1,7 @@
 define([], function() {
   return {
-    "PropertyPaneDescription": "Description",
-    "BasicGroupName": "Group Name",
-    "BaseNavTitleFieldLabel": "Base Page Navigation Title"
+    "PropertyPaneDescription": "Add an additional navigation menu to your page.",
+    "BasicGroupName": "Settings",
+    "BaseNavTitleFieldLabel": "Navigation Menu Title"
   }
 });

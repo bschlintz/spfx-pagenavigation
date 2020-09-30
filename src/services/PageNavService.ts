@@ -1,41 +1,130 @@
 import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { PageNavLink } from "../models/PageNavLink";
+import { SPHttpClient } from '@microsoft/sp-http';
+import { PageNavItem } from "../models/PageNavItem";
+import { PageNavItemResult } from "../models/PageNavItemResult";
+
+const PAGE_NAV_LIST_TITLE = "Page Navigation";
+const DEFAULT_NAV_ITEM_TITLE = "Page Navigation";
 
 export default class PageNavService {
   private _context: WebPartContext;
-  private _pageUrl: string;
+  private _serverRelativePageUrl: string;
 
-  constructor(context: WebPartContext, pageUrl: string) {
+  constructor(context: WebPartContext, serverRelativePageUrl: string) {
     this._context = context;
-    this._pageUrl = pageUrl;
+    this._serverRelativePageUrl = serverRelativePageUrl ? serverRelativePageUrl.toLowerCase() : 'NO_PAGE_URL_SPECIFIED';
   }
 
-  public getNavLinks = async (): Promise<PageNavLink[]> => {
-    return [
-      { title: 'Top Link A', url: 'https://bing.com', children: [
-        { title: 'Child AA', url: 'https://bing.com', newTab: true, childrenExpanded: false, children: [
-          { title: 'Child AAA', url: 'https://bing.com'},
-          { title: 'Child AAB', url: 'https://bing.com'},
-          { title: 'Child AAC', url: 'https://bing.com'},
-        ] },
-        { title: 'Child AB', url: 'https://bing.com'},
-        { title: 'Child AC', url: 'https://bing.com'},
-      ]},
-      { title: 'Top Link B', url: 'https://bing.com', children: [
-        { title: 'Child BA', url: 'https://bing.com', newTab: true },
-        { title: 'Child BB', url: 'https://bing.com'},
-        { title: 'Child BC', url: 'https://bing.com'},
-      ]},
-      { title: 'Top Link C', url: 'https://bing.com', children: [
-        { title: 'Child CA', url: 'https://bing.com', newTab: true },
-        { title: 'Child CB', url: 'https://bing.com'},
-        { title: 'Child CC', url: 'https://bing.com'},
-      ]},
-      { title: 'Top Link D', url: 'https://bing.com', children: [
-        { title: 'Child DA', url: 'https://bing.com', newTab: true },
-        { title: 'Child DB', url: 'https://bing.com'},
-        { title: 'Child DC', url: 'https://bing.com'},
-      ]},
-    ];
+  private _getPageNavItem = async (): Promise<PageNavItem> => {
+    const apiPath = `/_api/lists/getbytitle('${PAGE_NAV_LIST_TITLE}')/items?$filter=PageUrl eq '${this._serverRelativePageUrl}'`;
+    const response = await this._context.spHttpClient.get(`${this._context.pageContext.web.absoluteUrl}${apiPath}`, SPHttpClient.configurations.v1);
+    if (response.ok) {
+      const result = await response.json();
+      if (!result.value) return null;
+      else if (result.value.length === 1) {
+        const item = result.value[0];
+        try {
+          const data = item.NavigationData ? JSON.parse(item.NavigationData) : null;
+          return {
+            ItemId: item.ID,
+            Title: item.Title,
+            PageUrl: item.PageUrl,
+            NavigationData: data
+          }
+        }
+        catch (error) {
+          throw new Error(`Unable to parse NavigationData for page navigation list item. Details: ${error.message}`);
+        }
+      }
+    }
+    else throw new Error(`Unable to fetch page navigation list item. Details: HTTP ${response.status} ${response.statusText}`);
+  }
+
+  private _addPageNavItem = async (item: PageNavItem): Promise<PageNavItem> => {
+    const apiPath = `/_api/lists/getbytitle('${PAGE_NAV_LIST_TITLE}')/items`;
+    const response = await this._context.spHttpClient.post(`${this._context.pageContext.web.absoluteUrl}${apiPath}`, SPHttpClient.configurations.v1, {
+      body: JSON.stringify({
+        ...item,
+        NavigationData: JSON.stringify(item.NavigationData)
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    if (response.ok) {
+      const result = await response.json();
+      return result;
+    }
+    else throw new Error(`Unable to add page navigation list item. Details: HTTP ${response.status} ${response.statusText}`);
+  }
+
+  private _updatePageNavItem = async (updatedItem: PageNavItem): Promise<void> => {
+    const apiPath = `/_api/lists/getbytitle('${PAGE_NAV_LIST_TITLE}')/items(${updatedItem.ItemId})`;
+    let updatePayload = {
+      ...updatedItem,
+      NavigationData: JSON.stringify(updatedItem.NavigationData)
+    };
+    delete updatePayload.ItemId;
+    const response = await this._context.spHttpClient.post(`${this._context.pageContext.web.absoluteUrl}${apiPath}`, SPHttpClient.configurations.v1, {
+      body: JSON.stringify(updatePayload),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-HTTP-Method': 'MERGE',
+        'If-Match': '*'
+      }
+    });
+    if (!response.ok) throw new Error(`Unable to update page navigation list item. Details: HTTP ${response.status} ${response.statusText}`);
+  }
+
+  public ensureListItem = async (createIfMissing: boolean = false): Promise<PageNavItemResult> => {
+    let result: PageNavItemResult = { type: 'ItemFound', item: null };
+    try {
+      const pageNavItem = await this._getPageNavItem();
+      if (!pageNavItem) {
+        if (createIfMissing) {
+          await this._addPageNavItem({
+            Title: DEFAULT_NAV_ITEM_TITLE,
+            PageUrl: this._serverRelativePageUrl,
+            NavigationData: []
+          });
+          result.item = await this._getPageNavItem();
+          result.type = 'ItemCreated';
+        }
+        else {
+          result.type = "ItemMissing";
+        }
+      }
+      else {
+        result.item = pageNavItem;
+      }
+    }
+    catch (error) {
+      console.log(`Unable to ensure page navigation item.`, error);
+      result.type = 'Error';
+      result.errorMessage = error.message;
+    }
+    finally {
+      return result;
+    }
+  }
+
+  public updateListItem = async (updatedItem: PageNavItem): Promise<PageNavItemResult> => {
+    let result: PageNavItemResult = { type: 'ItemUpdated', item: null };
+    try {
+      if (updatedItem && !updatedItem.ItemId) {
+        throw new Error(`ItemId is required to update page navigation item`);
+      }
+      await this._updatePageNavItem(updatedItem);
+      const pageNavItem = await this._getPageNavItem();
+      result.item = pageNavItem;
+    }
+    catch (error) {
+      console.log(`Unable to update page navigation item.`, error);
+      result.type = 'Error';
+      result.errorMessage = error.message;
+    }
+    finally {
+      return result;
+    }
   }
 }

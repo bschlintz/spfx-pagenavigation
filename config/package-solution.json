@@ -1,12 +1,28 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "Page Navigation",
+    "name": "Page Navigation Web Part",
     "id": "840975cd-1c33-4576-a145-8c5e4d6c5b7c",
-    "version": "1.0.0.0",
+    "version": "1.0.1.0",
     "includeClientSideAssets": true,
     "isDomainIsolated": false,
     "skipFeatureDeployment": false,
+    "features": [
+      {
+        "title": "Page Navigation List",
+        "description": "Provision list to store list items that support the 'Page Navigation' web part.",
+        "id": "01042548-a89a-4879-b2c8-238b7bb99750",
+        "version": "1.0.0.0",
+        "assets": {
+          "elementManifests": [
+            "PageNavigationListInstance.xml"
+          ],
+          "elementFiles": [
+            "PageNavigationListSchema.xml"
+          ]
+        }
+      }
+    ],
     "developer": {
       "name": "",
       "websiteUrl": "",
