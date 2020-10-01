@@ -5,7 +5,6 @@ import { Dialog, DialogFooter, DialogType } from '@fluentui/react/lib/Dialog';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { TextField } from '@fluentui/react/lib/TextField';
 import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
-import { generate as makeShortId } from 'short-uuid';
 import NavEditor from './NavEditor';
 import styles from '../PageNavigation.module.scss';
 
@@ -35,29 +34,35 @@ const EditPanel: React.FC<IEditPanelProps> = ({ navTitle, navLinks, isOpen, onSa
 
   const onClickSave = async () => {
     setIsSaving(true);
-    await onSave(localNavTitle, mapRemoveIds(localNavLinks));
+    await onSave(localNavTitle, localNavLinks);
     setIsSaving(false);
   };
 
-  const mapAddIds = (links: PageNavLink[]): PageNavLink[] => {
-    return links.map<PageNavLink>((link: PageNavLink) => ({
-      ...link,
-      id: makeShortId(),
-      children: link.children ? mapAddIds(link.children) : undefined
-    }));
-  };
+  // const mapAddIds = (links: PageNavLink[]): PageNavLink[] => {
+  //   return links.map<PageNavLink>((link: PageNavLink) => ({
+  //     ...link,
+  //     id: makeShortId(),
+  //     children: link.children ? mapAddIds(link.children) : undefined
+  //   }));
+  // };
 
-  const mapRemoveIds = (links: PageNavLink[]): PageNavLink[] => {
-    return links.map<PageNavLink>((link: PageNavLink) => ({
-      ...link,
-      id: undefined,
-      children: link.children ? mapAddIds(link.children) : undefined
-    }));
-  };
+  // const mapRemoveIds = (links: PageNavLink[]): PageNavLink[] => {
+  //   return links.map<PageNavLink>((link: PageNavLink) => ({
+  //     ...link,
+  //     id: undefined,
+  //     children: link.children ? mapAddIds(link.children) : undefined
+  //   }));
+  // };
 
   React.useEffect(() => {
-    setLocalNavTitle(navTitle);
-    setLocalNavLinks(mapAddIds(navLinks));
+    if (isOpen) {
+      setLocalNavTitle(navTitle);
+      setLocalNavLinks(navLinks);
+    }
+    else {
+      setLocalNavTitle("");
+      setLocalNavLinks([]);
+    }
   }, [ navTitle, navLinks, isOpen ]);
 
   return (
