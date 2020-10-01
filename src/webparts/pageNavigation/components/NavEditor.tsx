@@ -3,8 +3,9 @@ import styles from '../PageNavigation.module.scss';
 import { ActionButton, IButtonStyles } from '@fluentui/react';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { cloneDeep } from '@microsoft/sp-lodash-subset';
+import NavLinkModal from './NavLinkModal';
 
 export interface INavEditorProps {
   navLinks: PageNavLink[];
@@ -21,6 +22,8 @@ type NavItem = {
 }
 
 const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) => {
+  const [ isEditLinkOpen, setEditLinkOpen ] = useState<boolean>();
+  const [ activeItem, setActiveItem ] = useState<NavItem>(null);
 
   const replace = (id: string, replacement: PageNavLink, navItems: PageNavLink[]): PageNavLink => {
     let parentList: PageNavLink[] = navItems;
@@ -60,9 +63,22 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     onNavLinksChange(newNavItems);
   };
 
-  const edit = (pageNavLink: PageNavLink): void => {
-
+  const edit = (navItem: NavItem): void => {
+    setActiveItem(navItem);
+    setEditLinkOpen(true);
   };
+
+  const onEditCancel = () => {
+    setEditLinkOpen(false);
+    setActiveItem(null);
+  }
+
+  const onEditSave = (navLink: PageNavLink) => {
+    const newNavItems = cloneDeep(navLinks);
+    replace(activeItem.id, navLink, newNavItems);
+    onNavLinksChange(newNavItems);
+    setEditLinkOpen(false);
+  }
 
   const addBelow = (pageNavLink: PageNavLink): void => {
 
@@ -106,7 +122,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
             {navItem.nextId && <ActionButton styles={buttonStyles} onClick={() => moveDown(navItem)} iconProps={{ iconName: 'Down' }} />}
           </Stack>
           <Stack className={styles.navEditButtonWrapper}>
-            <ActionButton styles={buttonStyles} iconProps={{ iconName: 'Edit' }} />
+            <ActionButton styles={buttonStyles} onClick={() => edit(navItem)} iconProps={{ iconName: 'Edit' }} />
           </Stack>
           {/* <ActionButton styles={buttonStyles} iconProps={{ iconName: 'Add' }} /> */}
         </Stack>
@@ -121,6 +137,12 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
   return (
     <Stack className={styles.navEditInnerContainer}>
       {navItems.map(topNavLink => renderLevel(topNavLink))}
+      <NavLinkModal
+        isOpen={isEditLinkOpen}
+        navLink={activeItem ? activeItem.item : null}
+        onCancel={onEditCancel}
+        onSave={onEditSave}
+      />
     </Stack>
   );
 }

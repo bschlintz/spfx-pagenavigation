@@ -8,7 +8,7 @@ import { Version } from '@microsoft/sp-core-library';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 
 // import * as strings from 'PageNavigationWebPartStrings';
-import PageNavigationContainer, { IPageNavigationContainerProps } from './components/PageNavigationContainer';
+import PageNavigation, { IPageNavigationContainerProps } from './components/PageNavigation';
 import PageNavService from '../../services/PageNavService';
 
 export interface IPageNavigationWebPartProps {
@@ -24,7 +24,7 @@ export default class PageNavigationWebPart extends BaseClientSideWebPart<IPageNa
 
   public render(): void {
     const element: React.ReactElement<IPageNavigationContainerProps> = React.createElement(
-      PageNavigationContainer,
+      PageNavigation,
       {
         service: this._pageNavService,
       }

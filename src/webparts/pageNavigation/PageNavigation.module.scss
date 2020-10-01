@@ -16,22 +16,20 @@ $link_height: 30px;
       line-height: $link_height;
     }
   }
-}
-
-.navEditPanel {
-  max-width: 500px;
-  max-height: 800px;
-  width: 100%;
-  height: 100%;
 
   .navEditInnerContainer {
-    max-height: 500px;
+    max-height: 400px;
     overflow: auto;
     padding-right: 10px;
   }
 
   .navEditLevel {
     margin-left: 20px;
+  }
+
+  .navEditPageNavField {
+    font-size: 18px;
+    font-weight: 700;
   }
 
   .navEditItemRow {

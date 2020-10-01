@@ -1,70 +1,142 @@
 import * as React from 'react';
-import { useMemo} from 'react';
-import { INavLink, INavLinkGroup, Nav } from '@fluentui/react/lib/Nav';
-import { Spinner } from '@fluentui/react/lib/Spinner';
+import { useEffect, useState } from 'react';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
+import PageNavService from '../../../services/PageNavService';
 import styles from '../PageNavigation.module.scss';
-import { ActionButton } from '@fluentui/react';
+import { Spinner } from '@fluentui/react';
+import { PageNavItem } from '../../../models/PageNavItem';
+import EditMode from './EditMode';
+import SetupMode from './SetupMode';
+import ViewMode from './ViewMode';
 
-export interface IPageNavigationProps {
-  navTitle: string;
-  navLinks: PageNavLink[];
-  isLoading: boolean;
-  isEditable: boolean;
-  onClickEdit: () => void;
+export interface IPageNavigationContainerProps {
+  service: PageNavService;
 }
 
-const PageNavigation: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, isLoading, isEditable, onClickEdit }) => {
+export enum Mode {
+  Loading,
+  View,
+  Edit,
+  Setup,
+  Error
+}
 
-  const mapLinks = (link: PageNavLink): INavLink => ({
-    name: link.title,
-    url: link.url,
-    target: link.newTab ? '_blank' : '_self',
-    isExpanded: typeof(link.childrenExpanded) === 'undefined' ? true : link.childrenExpanded,
-    links: Array.isArray(link.children) ? link.children.map(mapLinks) : undefined
-  })
+const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) => {
+  const [ pageNavItem, setPageNavItem ] = useState<PageNavItem>(null);
+  const [ errorMessage, setErrorMessage ] = useState<string>(null);
+  const [ userCanEdit, setUserCanEdit ] = useState<boolean>(true);
+  const [ mode, setMode ] = useState<Mode>(Mode.Loading);
+  const navLinks = pageNavItem ? pageNavItem.NavigationData : [];
+  const navTitle = pageNavItem ? pageNavItem.Title : "";
 
-  const fabricNavGroups = useMemo<INavLinkGroup[]>(() => {
-    let groups: INavLinkGroup[] = [];
-    if (navLinks && navLinks.length > 0) {
-      groups = [{
-        links: navLinks.map(mapLinks),
-      }]
+  const load = async (ensureItem: boolean): Promise<void> => {
+    try {
+      setErrorMessage(null);
+      const ensureResult = await service.ensureListItem(ensureItem);
+      switch (ensureResult.type)
+      {
+        case "ItemMissing": setMode(Mode.Setup); break;
+        case "Error": {
+          setErrorMessage(ensureResult.errorMessage);
+          setMode(Mode.Error);
+          break;
+        }
+        default: {
+          setPageNavItem(ensureResult.item);
+          setMode(Mode.View);
+        }
+      }
     }
-    return groups;
-  }, [ navLinks ]);
+    catch (error) {
+      console.log(`Unable to fetch page navigation links.`, error);
+      setErrorMessage(error.message);
+      setMode(Mode.Error);
+    }
+  }
+
+  const save = async (newNavTitle: string, newNavLinks: PageNavLink[]): Promise<void> => {
+    try {
+      setMode(Mode.Loading);
+      setErrorMessage(null);
+      const updateResult = await service.updateListItem({
+        ...pageNavItem,
+        Title: newNavTitle,
+        NavigationData: newNavLinks
+      });
+      if (updateResult.type === "Error") {
+        setErrorMessage(updateResult.errorMessage);
+        setMode(Mode.Error);
+      }
+      else if (updateResult.type === "ItemUpdated") {
+        setPageNavItem(updateResult.item);
+        setMode(Mode.View);
+      }
+    }
+    catch (error) {
+      console.log(`Unable to update page navigation links.`, error);
+      setErrorMessage(error.message);
+      setMode(Mode.Error);
+    }
+  }
+
+  const onClickEdit = () => {
+    setMode(Mode.Edit);
+  }
+
+  const onEditPanelSave = async (newNavTitle: string, newNavLinks: PageNavLink[]): Promise<void> => {
+    setMode(Mode.Loading);
+    await save(newNavTitle, newNavLinks);
+  }
+
+  const onEditPanelCancel = () => {
+    setMode(Mode.View);
+  }
+
+  const onClickEnable = () => {
+    setMode(Mode.Loading);
+    load(true);
+  }
+
+  useEffect(() => {
+    setMode(Mode.Loading);
+    load(false);
+  }, []);
 
   return (
-    <Stack>
-      {isLoading
-        ? <Spinner />
-        : <>
-            <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-              <h2>{navTitle}</h2>
-              {isEditable && (
-                <ActionButton
-                  onClick={onClickEdit}
-                  iconProps={{ iconName: 'Edit' }}
-                >Edit</ActionButton>
-              )}
-            </Stack>
-            {fabricNavGroups.length > 0 && fabricNavGroups[0].links.length > 0
-              ? <Nav
-                  groups={fabricNavGroups}
-                  styles={{
-                    groupContent: styles.navGroupContent,
-                    link: styles.navLink,
-                    chevronButton: styles.navChevronButton,
-                    chevronIcon: styles.navChevronIcon,
-                  }}
-                />
-              : <span>No links to show.</span>
-            }
-          </>
-      }
-    </Stack>
+    <div className={ styles.pageNavigationContainer }>
+      {errorMessage && (
+        <Stack>
+          <span>{errorMessage}</span>
+        </Stack>
+      )}
+      {mode === Mode.Loading && (
+        <Spinner />
+      )}
+      {mode === Mode.Setup && (
+        <SetupMode
+          isEditable={userCanEdit}
+          onClickEnable={onClickEnable}
+        />
+      )}
+      {mode === Mode.View && (
+        <ViewMode
+          navTitle={navTitle}
+          navLinks={navLinks}
+          isEditable={userCanEdit}
+          onClickEdit={onClickEdit}
+        />
+      )}
+      {mode === Mode.Edit && (
+        <EditMode
+          navTitle={navTitle}
+          navLinks={navLinks}
+          onSave={onEditPanelSave}
+          onCancel={onEditPanelCancel}
+        />
+      )}
+    </div>
   );
 }
 
-export default PageNavigation
+export default PageNavigation;
