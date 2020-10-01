@@ -16,11 +16,11 @@ export interface IPageNavigationContainerProps {
 const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ service }) => {
   const [ isLoading, setLoading ] = useState<boolean>(true);
   const [ pageNavItem, setPageNavItem ] = useState<PageNavItem>(null);
-  const [ activeNavLinks, setActiveNavLinks ] = useState<PageNavLink[]>([]);
   const [ pageNavError, setPageNavError ] = useState<string>(null);
   const [ userCanEdit, setUserCanEdit ] = useState<boolean>(true);
   const [ showEditPanel, setShowEditPanel ] = useState<boolean>(false);
   const [ isItemMissing, setItemMissing ] = useState<boolean>(false);
+  const navLinks = pageNavItem ? pageNavItem.NavigationData : [];
   const navTitle = pageNavItem ? pageNavItem.Title : "";
 
   const load = async (ensureItem: boolean): Promise<void> => {
@@ -33,10 +33,7 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
       {
         case "ItemMissing": setItemMissing(true); break;
         case "Error": setPageNavError(ensureResult.errorMessage); break;
-        default: {
-          setPageNavItem(ensureResult.item);
-          if (ensureResult.item) setActiveNavLinks(ensureResult.item.NavigationData);
-        }
+        default: setPageNavItem(ensureResult.item);
       }
     }
     catch (error) {
@@ -48,11 +45,12 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
     }
   }
 
-  const save = async (newNavLinks: PageNavLink[]): Promise<void> => {
+  const save = async (newNavTitle: string, newNavLinks: PageNavLink[]): Promise<void> => {
     try {
       setLoading(true);
       const updateResult = await service.updateListItem({
         ...pageNavItem,
+        Title: newNavTitle,
         NavigationData: newNavLinks
       });
       if (updateResult.type === "Error") {
@@ -60,7 +58,6 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
       }
       else if (updateResult.type === "ItemUpdated") {
         setPageNavItem(updateResult.item);
-        if (updateResult.item) setActiveNavLinks(updateResult.item.NavigationData);
       }
       setLoading(false);
     }
@@ -77,8 +74,8 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
     setShowEditPanel(true);
   }
 
-  const onEditPanelSave = async (newNavLinks: PageNavLink[]): Promise<void> => {
-    await save(newNavLinks);
+  const onEditPanelSave = async (newNavTitle: string, newNavLinks: PageNavLink[]): Promise<void> => {
+    await save(newNavTitle, newNavLinks);
     setShowEditPanel(false);
   }
 
@@ -120,15 +117,16 @@ const PageNavigationContainer: React.FC<IPageNavigationContainerProps> = ({ serv
       {isItemMissing
         ? renderItemMissing()
         : <PageNavigation
+            navTitle={navTitle}
+            navLinks={navLinks}
             isEditable={userCanEdit}
             isLoading={isLoading}
-            navLinks={activeNavLinks}
-            navTitle={navTitle}
             onClickEdit={onClickEdit}
           />
       }
       <EditPanel
-        navLinks={activeNavLinks}
+        navTitle={navTitle}
+        navLinks={navLinks}
         isOpen={showEditPanel}
         onSave={onEditPanelSave}
         onCancel={onEditPanelCancel}

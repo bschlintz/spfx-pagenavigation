@@ -1,7 +1,7 @@
 export type PageNavLink = {
   title: string;
   url: string;
-  ordinal?: number;
+  id?: string;
   newTab?: boolean;
   children?: PageNavLink[];
   childrenExpanded?: boolean;
