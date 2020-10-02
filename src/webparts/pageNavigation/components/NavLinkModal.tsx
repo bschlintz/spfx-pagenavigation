@@ -64,7 +64,6 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
     <Dialog
       hidden={!isOpen}
       onDismiss={onCancel}
-      isBlocking={false}
       dialogContentProps={{
         type: DialogType.close,
         title: 'Edit Link'
