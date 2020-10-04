@@ -4,7 +4,6 @@ import { PageNavItem } from "../models/PageNavItem";
 import { PageNavItemResult } from "../models/PageNavItemResult";
 
 const PAGE_NAV_LIST_TITLE = "Page Navigation";
-const DEFAULT_NAV_ITEM_TITLE = "Page Navigation";
 
 export default class PageNavService {
   private _context: WebPartContext;
@@ -13,6 +12,22 @@ export default class PageNavService {
   constructor(context: WebPartContext, serverRelativePageUrl: string) {
     this._context = context;
     this._serverRelativePageUrl = serverRelativePageUrl ? serverRelativePageUrl.toLowerCase() : 'NO_PAGE_URL_SPECIFIED';
+  }
+
+  get context(): WebPartContext {
+    return this._context;
+  }
+
+  private _makeDefaultNavItem = (pageUrl: string): PageNavItem => {
+    return {
+      Title: "Page Navigation",
+      PageUrl: pageUrl,
+      NavigationData: [
+        { title: 'First Link', url: 'https://office.com', newTab: true },
+        { title: 'Second Link', url: 'https://office.com', newTab: true },
+        { title: 'Third Link', url: 'https://office.com', newTab: true },
+      ]
+    }
   }
 
   private _getPageNavItem = async (): Promise<PageNavItem> => {
@@ -82,11 +97,7 @@ export default class PageNavService {
       const pageNavItem = await this._getPageNavItem();
       if (!pageNavItem) {
         if (createIfMissing) {
-          await this._addPageNavItem({
-            Title: DEFAULT_NAV_ITEM_TITLE,
-            PageUrl: this._serverRelativePageUrl,
-            NavigationData: []
-          });
+          await this._addPageNavItem(this._makeDefaultNavItem(this._serverRelativePageUrl));
           result.item = await this._getPageNavItem();
           result.type = 'ItemCreated';
         }

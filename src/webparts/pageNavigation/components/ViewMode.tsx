@@ -1,19 +1,22 @@
 import * as React from 'react';
-import { useMemo} from 'react';
+import { useMemo } from 'react';
 import { INavLink, INavLinkGroup, Nav } from '@fluentui/react/lib/Nav';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
 import styles from '../PageNavigation.module.scss';
-import { ActionButton } from '@fluentui/react';
+import { ActionButton } from '@fluentui/react/lib/Button';
+import { SecurityTrimmedControl, PermissionLevel } from "@pnp/spfx-controls-react/lib/SecurityTrimmedControl";
+import { SPPermission } from '@microsoft/sp-page-context';
+import PageNavService from '../../../services/PageNavService';
 
 export interface IPageNavigationProps {
   navTitle: string;
   navLinks: PageNavLink[];
-  isEditable: boolean;
+  service: PageNavService;
   onClickEdit: () => void;
 }
 
-const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, isEditable, onClickEdit }) => {
+const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service, onClickEdit }) => {
 
   const mapLinks = (link: PageNavLink): INavLink => ({
     name: link.title,
@@ -37,12 +40,18 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, isEditab
     <Stack>
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
         <h2>{navTitle}</h2>
-        {isEditable && (
+        <SecurityTrimmedControl
+          context={service.context}
+          level={PermissionLevel.remoteListOrLib}
+          remoteSiteUrl={service.context.pageContext.web.absoluteUrl}
+          relativeLibOrListUrl={`${service.context.pageContext.web.absoluteUrl}/lists/PageNavigation`}
+          permissions={[SPPermission.editListItems]}
+        >
           <ActionButton
             onClick={onClickEdit}
             iconProps={{ iconName: 'Edit' }}
           >Edit</ActionButton>
-        )}
+        </SecurityTrimmedControl>
       </Stack>
       {fabricNavGroups.length > 0 && fabricNavGroups[0].links.length > 0
         ? <Nav

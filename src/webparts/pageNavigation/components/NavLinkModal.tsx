@@ -12,7 +12,7 @@ export interface INavLinkModalProps {
   navLink: PageNavLink;
   isOpen: boolean;
   onCancel: () => void;
-  onSave: (newNavLink: PageNavLink) => void;
+  onSave: (newOrUpdatedNavLink: PageNavLink) => void;
 }
 
 const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, onCancel }) => {
@@ -52,7 +52,6 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
   }
 
   const onClickSave = async () => {
-    console.log(`localNavLink onSave`, localNavLink);
     onSave(localNavLink);
   };
 
@@ -68,8 +67,9 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
         type: DialogType.close,
         title: 'Edit Link'
       }}
+      minWidth={400}
     >
-      {isOpen && localNavLink && <>
+      {localNavLink && <>
         <Stack tokens={{ padding: 15, childrenGap: 10 }}>
           <TextField label="Title" value={localNavLink.title} onChange={onTitleChange} />
           <TextField label="URL" value={localNavLink.url} onChange={onUrlChange} />
@@ -80,7 +80,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
           />
           {localNavLink.children && (
             <Toggle
-              label="Expand Children"
+              label="Always Expand Children"
               checked={typeof(localNavLink.childrenExpanded) === "undefined" ? false : localNavLink.childrenExpanded}
               onChange={onExpandChildrenChange}
             />

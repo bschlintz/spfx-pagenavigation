@@ -4,7 +4,7 @@ import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
 import PageNavService from '../../../services/PageNavService';
 import styles from '../PageNavigation.module.scss';
-import { Spinner } from '@fluentui/react';
+import { Spinner } from '@fluentui/react/lib/Spinner';
 import { PageNavItem } from '../../../models/PageNavItem';
 import EditMode from './EditMode';
 import SetupMode from './SetupMode';
@@ -25,7 +25,6 @@ export enum Mode {
 const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) => {
   const [ pageNavItem, setPageNavItem ] = useState<PageNavItem>(null);
   const [ errorMessage, setErrorMessage ] = useState<string>(null);
-  const [ userCanEdit, setUserCanEdit ] = useState<boolean>(true);
   const [ mode, setMode ] = useState<Mode>(Mode.Loading);
   const navLinks = pageNavItem ? pageNavItem.NavigationData : [];
   const navTitle = pageNavItem ? pageNavItem.Title : "";
@@ -115,7 +114,7 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
       )}
       {mode === Mode.Setup && (
         <SetupMode
-          isEditable={userCanEdit}
+          service={service}
           onClickEnable={onClickEnable}
         />
       )}
@@ -123,7 +122,7 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
         <ViewMode
           navTitle={navTitle}
           navLinks={navLinks}
-          isEditable={userCanEdit}
+          service={service}
           onClickEdit={onClickEdit}
         />
       )}

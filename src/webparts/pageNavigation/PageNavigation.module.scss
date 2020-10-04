@@ -39,11 +39,25 @@ $link_height: 30px;
     padding: 5px 10px;
   }
 
-  .navEditButtonWrapper {
-    min-width: 34px;
+  .navEditItemText {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
   }
 
-  .navEditActionButton {
+  .navEditCommandBarRoot {
+    padding: 0;
     height: 24px;
+    background-color: transparent;
+
+    button[class*="ms-Button--commandBar"] {
+      background-color: transparent;
+      border-radius: 2px;
+      min-width: 30px;
+
+      &[class*="is-expanded"], &:hover, &:hover i {
+        background-color: #fff;
+      }
+    }
   }
 }
