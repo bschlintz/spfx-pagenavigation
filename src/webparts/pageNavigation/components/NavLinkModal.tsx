@@ -89,7 +89,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
         <DialogFooter>
           <Stack horizontal horizontalAlign="end" tokens={{childrenGap: 10 }}>
             <DefaultButton onClick={onCancel}>Cancel</DefaultButton>
-            <PrimaryButton disabled={!hasChanges} onClick={onClickSave}>Save</PrimaryButton>
+            <PrimaryButton disabled={!hasChanges || !localNavLink.title || !localNavLink.url} onClick={onClickSave}>Save</PrimaryButton>
           </Stack>
         </DialogFooter>
       </>}

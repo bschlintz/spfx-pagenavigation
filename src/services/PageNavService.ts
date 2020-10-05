@@ -22,11 +22,7 @@ export default class PageNavService {
     return {
       Title: "Page Navigation",
       PageUrl: pageUrl,
-      NavigationData: [
-        { title: 'First Link', url: 'https://office.com', newTab: true },
-        { title: 'Second Link', url: 'https://office.com', newTab: true },
-        { title: 'Third Link', url: 'https://office.com', newTab: true },
-      ]
+      NavigationData: []
     }
   }
 
