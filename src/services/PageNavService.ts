@@ -23,7 +23,7 @@ export default class PageNavService {
       Title: "Page Navigation",
       PageUrl: pageUrl,
       NavigationData: []
-    }
+    };
   }
 
   private _getPageNavItem = async (): Promise<PageNavItem> => {
@@ -41,7 +41,7 @@ export default class PageNavService {
             Title: item.Title,
             PageUrl: item.PageUrl,
             NavigationData: data
-          }
+          };
         }
         catch (error) {
           throw new Error(`Unable to parse NavigationData for page navigation list item. Details: ${error.message}`);

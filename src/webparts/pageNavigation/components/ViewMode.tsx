@@ -24,7 +24,7 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
     target: link.newTab ? '_blank' : '_self',
     isExpanded: typeof(link.childrenExpanded) === 'undefined' ? true : link.childrenExpanded,
     links: Array.isArray(link.children) ? link.children.map(mapLinks) : undefined
-  })
+  });
 
   const fabricNavGroups = useMemo<INavLinkGroup[]>(() => {
     return [{
@@ -63,6 +63,6 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
       }
     </Stack>
   );
-}
+};
 
 export default ViewMode;

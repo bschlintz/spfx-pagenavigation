@@ -5,4 +5,4 @@ export type PageNavItem = {
   NavigationData: PageNavLink[];
   PageUrl: string;
   ItemId?: number;
-}
+};

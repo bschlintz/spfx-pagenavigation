@@ -30,6 +30,6 @@ const SetupMode: React.FC<IPageNavigationProps> = ({ service, onClickEnable }) =
       </Stack>
     </SecurityTrimmedControl>
   );
-}
+};
 
 export default SetupMode;

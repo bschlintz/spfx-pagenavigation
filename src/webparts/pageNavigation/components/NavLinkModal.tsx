@@ -26,7 +26,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       title: newValue
     });
     setHasChanges(true);
-  }
+  };
 
   const onUrlChange = (event: any, newValue: string) => {
     setLocalNavLink({
@@ -34,7 +34,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       url: newValue
     });
     setHasChanges(true);
-  }
+  };
 
   const onNewTabChange = (event: any, newValue: boolean) => {
     setLocalNavLink({
@@ -42,7 +42,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       newTab: newValue
     });
     setHasChanges(true);
-  }
+  };
 
   const onExpandChildrenChange = (event: any, newValue: boolean) => {
     setLocalNavLink({
@@ -50,7 +50,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       childrenExpanded: newValue
     });
     setHasChanges(true);
-  }
+  };
 
   const onClickSave = async () => {
     onSave(localNavLink);
@@ -93,7 +93,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
         </Stack>
       </>}
     </Dialog>
-  )
-}
+  );
+};
 
 export default NavLinkModal;

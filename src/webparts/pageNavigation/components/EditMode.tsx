@@ -23,12 +23,12 @@ const EditMode: React.FC<IEditPanelProps> = ({ navTitle, navLinks, onSave, onCan
   const onNavTitleChange = (event: any, newValue: string) => {
     setLocalNavTitle(newValue);
     setHasChanges(true);
-  }
+  };
 
-  const onNavLinksChange = (navLinks: PageNavLink[]) => {
-    setLocalNavLinks(navLinks);
+  const onNavLinksChange = (targetNavLinks: PageNavLink[]) => {
+    setLocalNavLinks(targetNavLinks);
     setHasChanges(true);
-  }
+  };
 
   const onClickSave = async () => {
     setIsSaving(true);
@@ -39,10 +39,10 @@ const EditMode: React.FC<IEditPanelProps> = ({ navTitle, navLinks, onSave, onCan
   React.useEffect(() => {
     setLocalNavTitle(navTitle);
     setLocalNavLinks(navLinks);
-    () => {
+    return () => {
       setLocalNavTitle("");
       setLocalNavLinks([]);
-    }
+    };
   }, [ navTitle, navLinks ]);
 
   return (
@@ -54,7 +54,7 @@ const EditMode: React.FC<IEditPanelProps> = ({ navTitle, navLinks, onSave, onCan
         <PrimaryButton disabled={!hasChanges || isSaving} onClick={onClickSave}>Save</PrimaryButton>
       </Stack>
     </Stack>
-  )
-}
+  );
+};
 
 export default EditMode;

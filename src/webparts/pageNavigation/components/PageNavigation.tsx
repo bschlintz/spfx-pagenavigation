@@ -52,7 +52,7 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
       setErrorMessage(error.message);
       setMode(Mode.Error);
     }
-  }
+  };
 
   const save = async (newNavTitle: string, newNavLinks: PageNavLink[]): Promise<void> => {
     try {
@@ -77,25 +77,25 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
       setErrorMessage(error.message);
       setMode(Mode.Error);
     }
-  }
+  };
 
   const onClickEdit = () => {
     setMode(Mode.Edit);
-  }
+  };
 
   const onEditPanelSave = async (newNavTitle: string, newNavLinks: PageNavLink[]): Promise<void> => {
     setMode(Mode.Loading);
     await save(newNavTitle, newNavLinks);
-  }
+  };
 
   const onEditPanelCancel = () => {
     setMode(Mode.View);
-  }
+  };
 
   const onClickEnable = () => {
     setMode(Mode.Loading);
     load(true);
-  }
+  };
 
   useEffect(() => {
     setMode(Mode.Loading);
@@ -167,6 +167,6 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
       )}
     </div>
   );
-}
+};
 
 export default PageNavigation;

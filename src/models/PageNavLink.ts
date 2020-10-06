@@ -5,4 +5,4 @@ export type PageNavLink = {
   newTab?: boolean;
   children?: PageNavLink[];
   childrenExpanded?: boolean;
-}
+};

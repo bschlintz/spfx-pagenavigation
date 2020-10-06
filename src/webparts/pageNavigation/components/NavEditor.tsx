@@ -5,8 +5,9 @@ import styles from '../PageNavigation.module.scss';
 import { CommandBar, ICommandBarItemProps } from '@fluentui/react/lib/CommandBar';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
+import { PageNavIndex } from '../../../models/PageNavIndex';
 import NavLinkModal from './NavLinkModal';
-import { ActionButton, PrimaryButton } from '@fluentui/react/lib/Button';
+import { ActionButton } from '@fluentui/react/lib/Button';
 
 const MAX_DEPTH = 4;
 
@@ -15,35 +16,25 @@ export interface INavEditorProps {
   onNavLinksChange: (newNavLinks: PageNavLink[]) => void;
 }
 
-type NavIndex = {
-  id: string;
-  nextId?: string;
-  prevId?: string;
-  parentId?: string;
-  depth?: number;
-  isLast?: boolean;
-  isFirst?: boolean;
-}
-
 const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) => {
   const [ isEditLinkOpen, setEditLinkOpen ] = useState<boolean>();
   const [ itemBeingEdited, setItemBeingEdited ] = useState<{
-    index: NavIndex,
+    index: PageNavIndex,
     link: PageNavLink,
     newLink: null | 'AddChild' | 'AddAbove' | 'AddBelow'
   }>(null);
 
   const { navIndexes, navIndexesList } = useMemo<{
-    navIndexes: { [id: string]: NavIndex },
-    navIndexesList: NavIndex[],
+    navIndexes: { [id: string]: PageNavIndex },
+    navIndexesList: PageNavIndex[],
   }>(() => {
-    let indexes: { [id: string]: NavIndex } = {};
-    let indexesList: NavIndex[] = [];
+    let indexes: { [id: string]: PageNavIndex } = {};
+    let indexesList: PageNavIndex[] = [];
 
     const buildNavIndex = (navLink: PageNavLink, index: number, maxIndex: number, depth: number, parentId?: string): void => {
       const parent = parentId ? `${parentId}_` : '';
       const currentId = `${parent}${index}`;
-      let navIndex: NavIndex = {
+      let navIndex: PageNavIndex = {
         id: currentId,
         nextId: (index < maxIndex) ? `${parent}${index + 1}` : null,
         prevId: (index > 0) ? `${parent}${index - 1}` : null,
@@ -74,8 +65,8 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
 
   const interpretId = (id: string): number[] => id.split('_').map(idx => Number.parseInt(idx));
 
-  const lookup = (id: string, navLinks: PageNavLink[]): PageNavLink => {
-    let parentList: PageNavLink[] = navLinks;
+  const lookup = (id: string, targetNavLinks: PageNavLink[]): PageNavLink => {
+    let parentList: PageNavLink[] = targetNavLinks;
     let target: PageNavLink = null;
     interpretId(id).map((itemIndex, depthIndex, itemIndexes) => {
       if (itemIndexes.length - 1 === depthIndex) {
@@ -86,10 +77,24 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
       }
     });
     return target;
-  }
+  };
 
-  const replace = (id: string, replacement: PageNavLink, navLinks: PageNavLink[]): PageNavLink => {
-    let parentList: PageNavLink[] = navLinks;
+  const flattenChildrenPastDepth = (navLink: PageNavLink, targetNavLinks: PageNavLink[], maxDepth: number, currentDepth: number = 1): PageNavLink[] => {
+    let flattenedChildren: PageNavLink[] = [];
+    if (navLink && navLink.children) {
+      navLink.children.map((childLink, childLinkIndex) => {
+        if (currentDepth >= maxDepth - 1 && childLink.children) {
+          navLink.children.splice(childLinkIndex + 1, 0, ...cloneDeep(childLink.children));
+          delete childLink.children;
+        }
+        flattenChildrenPastDepth(childLink, targetNavLinks, maxDepth, currentDepth + 1);
+      });
+    }
+    return flattenedChildren;
+  };
+
+  const replace = (id: string, replacement: PageNavLink, targetNavLinks: PageNavLink[]): PageNavLink => {
+    let parentList: PageNavLink[] = targetNavLinks;
     let replacedLink = null;
     const idList = interpretId(id);
     idList.map((itemIndex, depthIndex, itemIndexes) => {
@@ -101,12 +106,12 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
         parentList = parentList[itemIndex].children;
       }
     });
-    flattenChildrenPastDepth(navLinks[idList[0]], navLinks, MAX_DEPTH);
+    flattenChildrenPastDepth(targetNavLinks[idList[0]], targetNavLinks, MAX_DEPTH);
     return replacedLink;
   };
 
-  const insert = (navLink: PageNavLink, targetId: string, offset: number, navLinks: PageNavLink[]): void => {
-    let parentList: PageNavLink[] = navLinks;
+  const insert = (navLink: PageNavLink, targetId: string, offset: number, targetNavLinks: PageNavLink[]): void => {
+    let parentList: PageNavLink[] = targetNavLinks;
     const idList = interpretId(targetId);
     idList.map((itemIndex, depthIndex, itemIndexes) => {
       if (itemIndexes.length - 1 === depthIndex) {
@@ -120,11 +125,11 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
         parentList = parentList[itemIndex].children;
       }
     });
-    flattenChildrenPastDepth(navLinks[idList[0]], navLinks, MAX_DEPTH);
+    flattenChildrenPastDepth(targetNavLinks[idList[0]], targetNavLinks, MAX_DEPTH);
   };
 
-  const insertChild = (navLink: PageNavLink, targetId: string, navLinks: PageNavLink[], insertAsFirstChild: boolean = false): void => {
-    let parentList: PageNavLink[] = navLinks;
+  const insertChild = (navLink: PageNavLink, targetId: string, targetNavLinks: PageNavLink[], insertAsFirstChild: boolean = false): void => {
+    let parentList: PageNavLink[] = targetNavLinks;
     const idList = interpretId(targetId);
     idList.map((itemIndex, depthIndex, itemIndexes) => {
       if (itemIndexes.length - 1 === depthIndex) {
@@ -140,35 +145,21 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
         parentList = parentList[itemIndex].children;
       }
     });
-    flattenChildrenPastDepth(navLinks[idList[0]], navLinks, MAX_DEPTH);
+    flattenChildrenPastDepth(targetNavLinks[idList[0]], targetNavLinks, MAX_DEPTH);
   };
 
-  const flattenChildrenPastDepth = (navLink: PageNavLink, navLinks: PageNavLink[], maxDepth: number, currentDepth: number = 1): PageNavLink[] => {
-    let flattenedChildren: PageNavLink[] = [];
-    if (navLink && navLink.children) {
-      navLink.children.map((childLink, childLinkIndex) => {
-        if (currentDepth >= maxDepth - 1 && childLink.children) {
-          navLink.children.splice(childLinkIndex + 1, 0, ...cloneDeep(childLink.children));
-          delete childLink.children;
-        }
-        flattenChildrenPastDepth(childLink, navLinks, maxDepth, currentDepth + 1);
-      });
-    }
-    return flattenedChildren;
+  const insertBefore = (navLink: PageNavLink, targetId: string, targetNavLinks: PageNavLink[]): void => insert(navLink, targetId, 0, targetNavLinks);
+
+  const insertAfter = (navLink: PageNavLink, targetId: string, targetNavLinks: PageNavLink[]): void => insert(navLink, targetId, 1, targetNavLinks);
+
+  const swap = (sourceId: string, destinationId: string, targetNavLinks: PageNavLink[]): PageNavLink[] => {
+    const sourceLink = lookup(sourceId, targetNavLinks);
+    const destinationLink = replace(destinationId, sourceLink, targetNavLinks);
+    replace(sourceId, destinationLink, targetNavLinks);
+    return targetNavLinks;
   };
 
-  const insertBefore = (navLink: PageNavLink, targetId: string, navLinks: PageNavLink[]): void => insert(navLink, targetId, 0, navLinks);
-
-  const insertAfter = (navLink: PageNavLink, targetId: string, navLinks: PageNavLink[]): void => insert(navLink, targetId, 1, navLinks);
-
-  const swap = (sourceId: string, destinationId: string, navLinks: PageNavLink[]): PageNavLink[] => {
-    const sourceLink = lookup(sourceId, navLinks);
-    const destinationLink = replace(destinationId, sourceLink, navLinks);
-    replace(sourceId, destinationLink, navLinks);
-    return navLinks;
-  };
-
-  const moveUp = (navIndex: NavIndex): void => {
+  const moveUp = (navIndex: PageNavIndex): void => {
     let newNavLinks = cloneNavLinks();
     const navIndexIndex = navIndexesList.findIndex(idx => idx.id === navIndex.id);
     const linearPrevNavIndex = navIndexesList[navIndexIndex - 1];
@@ -194,7 +185,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     }
   };
 
-  const moveDown = (navIndex: NavIndex): void => {
+  const moveDown = (navIndex: PageNavIndex): void => {
     let newNavLinks = cloneNavLinks();
     const navIndexIndex = navIndexesList.findIndex(idx => idx.id === navIndex.id);
     const linearNextNavIndex = navIndexesList[navIndexIndex + 1];
@@ -216,7 +207,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     onNavLinksChange(newNavLinks);
   };
 
-  const promote = (navIndex: NavIndex, after: boolean = false): void => {
+  const promote = (navIndex: PageNavIndex, after: boolean = false): void => {
     let newNavLinks = cloneNavLinks();
     const currentItem = replace(navIndex.id, null, newNavLinks);
     if (after) {
@@ -228,20 +219,20 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     onNavLinksChange(newNavLinks);
   };
 
-  const demote = (navIndex: NavIndex): void => {
+  const demote = (navIndex: PageNavIndex): void => {
     let newNavLinks = cloneNavLinks();
     const currentItem = replace(navIndex.id, null, newNavLinks);
     insertChild(currentItem, navIndex.prevId, newNavLinks);
     onNavLinksChange(newNavLinks);
   };
 
-  const remove = (navIndex: NavIndex): void => {
+  const remove = (navIndex: PageNavIndex): void => {
     let newNavLinks = cloneNavLinks();
     replace(navIndex.id, null, newNavLinks);
     onNavLinksChange(newNavLinks);
-  }
+  };
 
-  const add = (navIndex: NavIndex): void => {
+  const add = (navIndex: PageNavIndex): void => {
     setItemBeingEdited({
       link: { title: '', url: '' },
       index: navIndex,
@@ -250,7 +241,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     setEditLinkOpen(true);
   };
 
-  const addChild = (navIndex: NavIndex): void => {
+  const addChild = (navIndex: PageNavIndex): void => {
     setItemBeingEdited({
       link: { title: '', url: '' },
       index: navIndex,
@@ -259,7 +250,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     setEditLinkOpen(true);
   };
 
-  const edit = (navLink: PageNavLink, navIndex: NavIndex): void => {
+  const edit = (navLink: PageNavLink, navIndex: PageNavIndex): void => {
     setItemBeingEdited({
       link: navLink,
       index: navIndex,
@@ -348,6 +339,6 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
       }
     </>
   );
-}
+};
 
 export default NavEditor;
