@@ -46,7 +46,7 @@ const EditMode: React.FC<IEditPanelProps> = ({ navTitle, navLinks, onSave, onCan
   }, [ navTitle, navLinks ]);
 
   return (
-    <Stack tokens={{ childrenGap: 10 }}>
+    <Stack className={styles.navEditOuterContainer} tokens={{ childrenGap: 10 }}>
       <TextField styles={{field: styles.navEditPageNavField}} placeholder="Page Navigation" value={localNavTitle} onChange={onNavTitleChange} />
       <NavEditor navLinks={localNavLinks} onNavLinksChange={onNavLinksChange}/>
       <Stack horizontal horizontalAlign="end" tokens={{childrenGap: 10 }}>

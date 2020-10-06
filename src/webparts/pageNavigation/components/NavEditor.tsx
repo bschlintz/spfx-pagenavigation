@@ -30,28 +30,30 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
   const [ itemBeingEdited, setItemBeingEdited ] = useState<{
     index: NavIndex,
     link: PageNavLink,
-    newLink: null | 'AddChild' | 'AddAbove'
+    newLink: null | 'AddChild' | 'AddAbove' | 'AddBelow'
   }>(null);
 
-  const navIndexes = useMemo<{ [id: string]: NavIndex }>(() => {
-    let indexes = {};
-    let isFirst = true;
-    let lastId = null;
+  const { navIndexes, navIndexesList } = useMemo<{
+    navIndexes: { [id: string]: NavIndex },
+    navIndexesList: NavIndex[],
+  }>(() => {
+    let indexes: { [id: string]: NavIndex } = {};
+    let indexesList: NavIndex[] = [];
 
     const buildNavIndex = (navLink: PageNavLink, index: number, maxIndex: number, depth: number, parentId?: string): void => {
       const parent = parentId ? `${parentId}_` : '';
       const currentId = `${parent}${index}`;
-      indexes[currentId] = {
+      let navIndex: NavIndex = {
         id: currentId,
         nextId: (index < maxIndex) ? `${parent}${index + 1}` : null,
         prevId: (index > 0) ? `${parent}${index - 1}` : null,
         parentId,
         depth,
-        isFirst,
+        isFirst: false,
         isLast: false,
-      } as NavIndex;
-      isFirst = false;
-      lastId = currentId;
+      };
+      indexes[currentId] = navIndex;
+      indexesList.push(navIndex);
       if (navLink && navLink.children) {
         navLink.children.map((childNavLink, childIndex) => {
           return buildNavIndex(childNavLink, childIndex, navLink.children.length - 1, depth + 1, currentId);
@@ -59,8 +61,13 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
       }
     };
     navLinks.map((navLink, index) => buildNavIndex(navLink, index, navLinks.length - 1, 1));
-    if (lastId) indexes[lastId].isLast = true;
-    return indexes;
+    if (indexesList.length > 0) {
+      indexesList[0].isFirst = true;
+      indexes[indexesList[0].id].isFirst = true;
+      indexesList[indexesList.length - 1].isLast = true;
+      indexes[indexesList[indexesList.length - 1].id].isLast = true;
+    }
+    return { navIndexes: indexes, navIndexesList: indexesList };
   }, [ navLinks ]);
 
   const cloneNavLinks = (): PageNavLink[] => cloneDeep(navLinks);
@@ -84,7 +91,8 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
   const replace = (id: string, replacement: PageNavLink, navLinks: PageNavLink[]): PageNavLink => {
     let parentList: PageNavLink[] = navLinks;
     let replacedLink = null;
-    interpretId(id).map((itemIndex, depthIndex, itemIndexes) => {
+    const idList = interpretId(id);
+    idList.map((itemIndex, depthIndex, itemIndexes) => {
       if (itemIndexes.length - 1 === depthIndex) {
         let replacementArr = replacement ? [ replacement ] : [];
         replacedLink = parentList.splice(itemIndex, 1, ...replacementArr)[0];
@@ -93,12 +101,14 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
         parentList = parentList[itemIndex].children;
       }
     });
+    flattenChildrenPastDepth(navLinks[idList[0]], navLinks, MAX_DEPTH);
     return replacedLink;
   };
 
   const insert = (navLink: PageNavLink, targetId: string, offset: number, navLinks: PageNavLink[]): void => {
     let parentList: PageNavLink[] = navLinks;
-    interpretId(targetId).map((itemIndex, depthIndex, itemIndexes) => {
+    const idList = interpretId(targetId);
+    idList.map((itemIndex, depthIndex, itemIndexes) => {
       if (itemIndexes.length - 1 === depthIndex) {
         const itemsAfterInsert = parentList.slice(itemIndex + offset);
         parentList.splice(itemIndex + offset, itemsAfterInsert.length, ...[
@@ -110,15 +120,21 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
         parentList = parentList[itemIndex].children;
       }
     });
+    flattenChildrenPastDepth(navLinks[idList[0]], navLinks, MAX_DEPTH);
   };
 
-  const insertChild = (navLink: PageNavLink, targetId: string, navLinks: PageNavLink[]): void => {
+  const insertChild = (navLink: PageNavLink, targetId: string, navLinks: PageNavLink[], insertAsFirstChild: boolean = false): void => {
     let parentList: PageNavLink[] = navLinks;
     const idList = interpretId(targetId);
     idList.map((itemIndex, depthIndex, itemIndexes) => {
       if (itemIndexes.length - 1 === depthIndex) {
         parentList[itemIndex].children = parentList[itemIndex].children || [];
-        parentList[itemIndex].children.push(navLink);
+        if (insertAsFirstChild) {
+          parentList[itemIndex].children.splice(0, 0, navLink);
+        }
+        else {
+          parentList[itemIndex].children.push(navLink);
+        }
       }
       else {
         parentList = parentList[itemIndex].children;
@@ -129,7 +145,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
 
   const flattenChildrenPastDepth = (navLink: PageNavLink, navLinks: PageNavLink[], maxDepth: number, currentDepth: number = 1): PageNavLink[] => {
     let flattenedChildren: PageNavLink[] = [];
-    if (navLink.children) {
+    if (navLink && navLink.children) {
       navLink.children.map((childLink, childLinkIndex) => {
         if (currentDepth >= maxDepth - 1 && childLink.children) {
           navLink.children.splice(childLinkIndex + 1, 0, ...cloneDeep(childLink.children));
@@ -153,25 +169,51 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
   };
 
   const moveUp = (navIndex: NavIndex): void => {
-    if (navIndex.prevId) {
-      let newNavLinks = cloneNavLinks();
-      const newNavItems = swap(navIndex.id, navIndex.prevId, newNavLinks);
-      onNavLinksChange(newNavItems);
-    }
-    else {
-      promote(navIndex);
+    let newNavLinks = cloneNavLinks();
+    const navIndexIndex = navIndexesList.findIndex(idx => idx.id === navIndex.id);
+    const linearPrevNavIndex = navIndexesList[navIndexIndex - 1];
+
+    if (linearPrevNavIndex) {
+      // linear previous and sibling previous are same, swap
+      if (linearPrevNavIndex.id === navIndex.prevId) {
+        newNavLinks = swap(navIndex.id, navIndex.prevId, newNavLinks);
+      }
+      else {
+        let navLink = replace(navIndex.id, null, newNavLinks);
+
+        // linear previous and parent are same, insert before parent
+        if (linearPrevNavIndex.id === navIndex.parentId) {
+          insertBefore(navLink, navIndex.parentId, newNavLinks);
+        }
+        // insert after linear previous
+        else {
+          insertAfter(navLink, linearPrevNavIndex.id, newNavLinks);
+        }
+      }
+      onNavLinksChange(newNavLinks);
     }
   };
 
   const moveDown = (navIndex: NavIndex): void => {
-    if (navIndex.nextId) {
-      let newNavLinks = cloneNavLinks();
-      swap(navIndex.id, navIndex.nextId, newNavLinks);
-      onNavLinksChange(newNavLinks);
+    let newNavLinks = cloneNavLinks();
+    const navIndexIndex = navIndexesList.findIndex(idx => idx.id === navIndex.id);
+    const linearNextNavIndex = navIndexesList[navIndexIndex + 1];
+
+    if ((linearNextNavIndex && linearNextNavIndex.id === navIndex.nextId) || !navIndex.parentId) {
+      newNavLinks = swap(navIndex.id, navIndex.nextId, newNavLinks);
     }
     else {
-      promote(navIndex, true);
+      let navLink = replace(navIndex.id, null, newNavLinks);
+
+      // linear previous and parent are same, insert before parent
+      if (linearNextNavIndex && linearNextNavIndex.id === navIndex.parentId) {
+        insertBefore(navLink, linearNextNavIndex.id, newNavLinks);
+      }
+      else {
+        insertAfter(navLink, navIndex.parentId, newNavLinks);
+      }
     }
+    onNavLinksChange(newNavLinks);
   };
 
   const promote = (navIndex: NavIndex, after: boolean = false): void => {
@@ -203,7 +245,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     setItemBeingEdited({
       link: { title: '', url: '' },
       index: navIndex,
-      newLink: 'AddAbove'
+      newLink: 'AddBelow'
     });
     setEditLinkOpen(true);
   };
@@ -240,7 +282,8 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
     else {
       switch (itemBeingEdited.newLink) {
         case 'AddAbove': insertBefore(newOrUpdatedNavLink, itemBeingEdited.index.id, newNavItems); break;
-        case 'AddChild': insertChild(newOrUpdatedNavLink, itemBeingEdited.index.id, newNavItems); break;
+        case 'AddBelow': insertAfter(newOrUpdatedNavLink, itemBeingEdited.index.id, newNavItems); break;
+        case 'AddChild': insertChild(newOrUpdatedNavLink, itemBeingEdited.index.id, newNavItems, true); break;
         default: replace(itemBeingEdited.index.id, newOrUpdatedNavLink, newNavItems);
       }
     }
@@ -254,14 +297,14 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
 
     let overflowItems: ICommandBarItemProps[] = [];
     if (navIndex.depth < MAX_DEPTH) {
-      overflowItems.push({ key: 'addChild', text: 'Add child', iconProps: { iconName: 'Add' }, onClick: () => addChild(navIndex) });
+      overflowItems.push({ key: 'addChild', text: 'Add sub link', iconProps: { iconName: 'Add' }, onClick: () => addChild(navIndex) });
     }
-    overflowItems.push({ key: 'remove', text: 'Remove', iconProps: { iconName: 'Delete' }, onClick: () => remove(navIndex) });
+    overflowItems.push({ key: 'remove', text: 'Remove link', iconProps: { iconName: 'Delete' }, onClick: () => remove(navIndex) });
     if (navIndex.depth > 1) {
-      overflowItems.push({ key: 'promote', text: 'Promote', iconProps: { iconName: 'Back' }, onClick: () => promote(navIndex) });
+      overflowItems.push({ key: 'promote', text: 'Promote sub link', iconProps: { iconName: 'Back' }, onClick: () => promote(navIndex, true) });
     }
     if (navIndex.depth < MAX_DEPTH && navIndex.prevId) {
-      overflowItems.push({ key: 'demote', text: 'Demote', iconProps: { iconName: 'Forward' }, onClick: () => demote(navIndex) });
+      overflowItems.push({ key: 'demote', text: 'Make sub link', iconProps: { iconName: 'Forward' }, onClick: () => demote(navIndex) });
     }
 
     return <>
@@ -269,7 +312,7 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
         <span className={styles.navEditItemText} title={navLink.title}>{navLink.title}</span>
         <CommandBar
           items={[
-            { key: 'addAbove', iconOnly: true, ariaLabel: 'Add Link', iconProps: { iconName: 'Add' }, onClick: () => add(navIndex) },
+            { key: 'add', iconOnly: true, ariaLabel: 'Add Link', iconProps: { iconName: 'Add' }, onClick: () => add(navIndex) },
             { key: 'up', disabled: navIndex.isFirst, ariaLabel: 'Move Up', iconOnly: true, iconProps: { iconName: 'Up' }, onClick: () => moveUp(navIndex) },
             { key: 'down', disabled: navIndex.depth === 1 && navIndex.isLast, ariaLabel: 'Move Down', iconOnly: true, iconProps: { iconName: 'Down' }, onClick: () => moveDown(navIndex) },
             { key: 'edit', iconOnly: true, ariaLabel: 'Edit Link', iconProps: { iconName: 'Edit' }, onClick: () => edit(navLink, navIndex) },
@@ -294,12 +337,15 @@ const NavEditor: React.FC<INavEditorProps> = ({ navLinks, onNavLinksChange }) =>
           <ActionButton iconProps={{iconName: 'Add'}} onClick={() => add(null)}>Add Link</ActionButton>
         )}
       </Stack>
-      <NavLinkModal
-        isOpen={isEditLinkOpen}
-        navLink={itemBeingEdited ? itemBeingEdited.link : null}
-        onCancel={onLinkModalCancel}
-        onSave={onLinkModalSave}
-      />
+      {itemBeingEdited &&
+        <NavLinkModal
+          isOpen={isEditLinkOpen}
+          navLink={itemBeingEdited.link}
+          isAdd={!!itemBeingEdited.newLink}
+          onCancel={onLinkModalCancel}
+          onSave={onLinkModalSave}
+        />
+      }
     </>
   );
 }

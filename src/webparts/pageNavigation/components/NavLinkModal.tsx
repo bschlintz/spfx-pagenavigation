@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { PageNavLink } from '../../../models/PageNavLink';
-import { Dialog, DialogFooter, DialogType } from '@fluentui/react/lib/Dialog';
+import { Dialog, DialogType } from '@fluentui/react/lib/Dialog';
 import { Stack } from '@fluentui/react/lib/Stack';
 import { TextField } from '@fluentui/react/lib/TextField';
 import { DefaultButton, PrimaryButton } from '@fluentui/react/lib/Button';
@@ -11,11 +11,12 @@ import styles from '../PageNavigation.module.scss';
 export interface INavLinkModalProps {
   navLink: PageNavLink;
   isOpen: boolean;
+  isAdd: boolean;
   onCancel: () => void;
   onSave: (newOrUpdatedNavLink: PageNavLink) => void;
 }
 
-const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, onCancel }) => {
+const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, onSave, onCancel }) => {
   const [ hasChanges, setHasChanges ] = useState<boolean>(false);
   const [ localNavLink, setLocalNavLink ] = useState<PageNavLink>(navLink);
 
@@ -65,12 +66,12 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
       onDismiss={onCancel}
       dialogContentProps={{
         type: DialogType.close,
-        title: 'Edit Link'
+        title: `${isAdd ? 'Add' : 'Edit'} Link`
       }}
       minWidth={400}
     >
       {localNavLink && <>
-        <Stack tokens={{ padding: 15, childrenGap: 10 }}>
+        <Stack tokens={{ childrenGap: 10 }}>
           <TextField label="Title" value={localNavLink.title} onChange={onTitleChange} />
           <TextField label="URL" value={localNavLink.url} onChange={onUrlChange} />
           <Toggle
@@ -85,13 +86,11 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, onSave, o
               onChange={onExpandChildrenChange}
             />
           )}
-        </Stack>
-        <DialogFooter>
-          <Stack horizontal horizontalAlign="end" tokens={{childrenGap: 10 }}>
+          <Stack horizontal horizontalAlign="end" tokens={{ padding: '10px 0 0 0', childrenGap: 10 }}>
             <DefaultButton onClick={onCancel}>Cancel</DefaultButton>
             <PrimaryButton disabled={!hasChanges || !localNavLink.title || !localNavLink.url} onClick={onClickSave}>Save</PrimaryButton>
           </Stack>
-        </DialogFooter>
+        </Stack>
       </>}
     </Dialog>
   )

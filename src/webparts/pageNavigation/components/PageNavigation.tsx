@@ -4,7 +4,7 @@ import { Stack } from '@fluentui/react/lib/Stack';
 import { PageNavLink } from '../../../models/PageNavLink';
 import PageNavService from '../../../services/PageNavService';
 import styles from '../PageNavigation.module.scss';
-import { Spinner } from '@fluentui/react/lib/Spinner';
+import { Shimmer, ShimmerElementType } from '@fluentui/react/lib/Shimmer';
 import { PageNavItem } from '../../../models/PageNavItem';
 import EditMode from './EditMode';
 import SetupMode from './SetupMode';
@@ -109,9 +109,6 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
           <span>{errorMessage}</span>
         </Stack>
       )}
-      {mode === Mode.Loading && (
-        <Spinner />
-      )}
       {mode === Mode.Setup && (
         <SetupMode
           service={service}
@@ -133,6 +130,40 @@ const PageNavigation: React.FC<IPageNavigationContainerProps> = ({ service }) =>
           onSave={onEditPanelSave}
           onCancel={onEditPanelCancel}
         />
+      )}
+      {mode === Mode.Loading && (
+        <Stack tokens={{ childrenGap: 10 }}>
+          <Shimmer shimmerElements={[
+            { type: ShimmerElementType.line, width: '70%', height: 25 },
+            { type: ShimmerElementType.gap, width: '31%' },
+          ]} />
+          {[1,2,3].map(_ => <>
+            <Shimmer shimmerElements={[
+              { type: ShimmerElementType.line, width: '60%', height: 20 },
+              { type: ShimmerElementType.gap, width: '41%' },
+            ]} />
+            <Shimmer shimmerElements={[
+              { type: ShimmerElementType.gap, width: '10%' },
+              { type: ShimmerElementType.line, width: '70%' },
+              { type: ShimmerElementType.gap, width: '21%' },
+            ]} />
+            <Shimmer shimmerElements={[
+              { type: ShimmerElementType.gap, width: '20%' },
+              { type: ShimmerElementType.line, width: '50%' },
+              { type: ShimmerElementType.gap, width: '31%' },
+            ]} />
+            <Shimmer shimmerElements={[
+              { type: ShimmerElementType.gap, width: '20%' },
+              { type: ShimmerElementType.line, width: '30%' },
+              { type: ShimmerElementType.gap, width: '52%' },
+            ]} />
+            <Shimmer shimmerElements={[
+              { type: ShimmerElementType.gap, width: '30%' },
+              { type: ShimmerElementType.line, width: '30%' },
+              { type: ShimmerElementType.gap, width: '42%' },
+            ]} />
+          </>)}
+        </Stack>
       )}
     </div>
   );

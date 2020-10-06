@@ -30,6 +30,7 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
     let groups: INavLinkGroup[] = [];
     if (navLinks && navLinks.length > 0) {
       groups = [{
+        name: navTitle,
         links: navLinks.map(mapLinks),
       }]
     }
@@ -38,25 +39,24 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
 
   return (
     <Stack>
-      <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-        <h2>{navTitle}</h2>
-        <SecurityTrimmedControl
-          context={service.context}
-          level={PermissionLevel.remoteListOrLib}
-          remoteSiteUrl={service.context.pageContext.web.absoluteUrl}
-          relativeLibOrListUrl={`${service.context.pageContext.web.absoluteUrl}/lists/PageNavigation`}
-          permissions={[SPPermission.editListItems]}
-        >
-          <ActionButton
-            onClick={onClickEdit}
-            iconProps={{ iconName: 'Edit' }}
-          >Edit</ActionButton>
-        </SecurityTrimmedControl>
-      </Stack>
+      <SecurityTrimmedControl
+        context={service.context}
+        level={PermissionLevel.remoteListOrLib}
+        remoteSiteUrl={service.context.pageContext.web.absoluteUrl}
+        relativeLibOrListUrl={`${service.context.pageContext.web.absoluteUrl}/lists/PageNavigation`}
+        permissions={[SPPermission.editListItems]}
+        className={styles.editButtonContainer}
+      >
+        <ActionButton
+          onClick={onClickEdit}
+          iconProps={{ iconName: 'Edit' }}
+        >Edit</ActionButton>
+      </SecurityTrimmedControl>
       {fabricNavGroups.length > 0 && fabricNavGroups[0].links.length > 0
         ? <Nav
             groups={fabricNavGroups}
             styles={{
+              group: styles.navGroup,
               groupContent: styles.navGroupContent,
               link: styles.navLink,
               chevronButton: styles.navChevronButton,

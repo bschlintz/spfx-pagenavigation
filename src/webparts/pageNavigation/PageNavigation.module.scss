@@ -1,10 +1,19 @@
 $link_height: 30px;
+$scroll_area_max_height: 450px;
 
 .pageNavigationContainer {
+
+  /* Setup Mode Styles */
   .enableNavContainer {
-    background-color: '[theme: neutralLighter, default: #f4f4f4]';
+    background-color: '[theme: neutralLighterAlt, default: #f8f8f8]';
+  }
+
+  /* View Mode Styles */
+  .navGroup > button {
+    font-size: 24px;
   }
   .navGroupContent {
+    margin-bottom: 0;
     .navLink {
       height: $link_height;
     }
@@ -15,12 +24,30 @@ $link_height: 30px;
       height: $link_height;
       line-height: $link_height;
     }
+
+    & > ul {
+      & > li > div [class*="ms-Nav-linkText"] {
+        font-size: 1.1em;
+        font-weight: 600;
+      }
+    }
+  }
+  .editButtonContainer {
+    position: absolute;
+    right: 0;
+    top: 7px;
+    z-index: 1;
+  }
+
+  /* Edit Mode Styles */
+  .navEditOuterContainer {
+    margin-top: 10px;
   }
 
   .navEditInnerContainer {
-    max-height: 400px;
+    max-height: $scroll_area_max_height;
     overflow: auto;
-    padding-right: 10px;
+    padding-right: 5px;
   }
 
   .navEditLevel {
@@ -28,15 +55,14 @@ $link_height: 30px;
   }
 
   .navEditPageNavField {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
   }
 
   .navEditItemRow {
-    background: #eee;
+    background-color: '[theme: neutralLighterAlt, default: #f8f8f8]';
     border-radius: 2px;
-    margin: 5px 0;
-    padding: 5px 10px;
+    padding: 3px 8px;
+    margin-bottom: 5px;
   }
 
   .navEditItemText {
@@ -60,4 +86,5 @@ $link_height: 30px;
       }
     }
   }
+
 }
