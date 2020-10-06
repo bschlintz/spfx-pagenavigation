@@ -27,14 +27,10 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
   })
 
   const fabricNavGroups = useMemo<INavLinkGroup[]>(() => {
-    let groups: INavLinkGroup[] = [];
-    if (navLinks && navLinks.length > 0) {
-      groups = [{
-        name: navTitle,
-        links: navLinks.map(mapLinks),
-      }]
-    }
-    return groups;
+    return [{
+      name: navTitle,
+      links: navLinks.map(mapLinks),
+    }];
   }, [ navLinks ]);
 
   return (
@@ -52,18 +48,18 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
           iconProps={{ iconName: 'Edit' }}
         >Edit</ActionButton>
       </SecurityTrimmedControl>
-      {fabricNavGroups.length > 0 && fabricNavGroups[0].links.length > 0
-        ? <Nav
-            groups={fabricNavGroups}
-            styles={{
-              group: styles.navGroup,
-              groupContent: styles.navGroupContent,
-              link: styles.navLink,
-              chevronButton: styles.navChevronButton,
-              chevronIcon: styles.navChevronIcon,
-            }}
-          />
-        : <span>No links to show.</span>
+      <Nav
+        groups={fabricNavGroups}
+        styles={{
+          group: styles.navGroup,
+          groupContent: styles.navGroupContent,
+          link: styles.navLink,
+          chevronButton: styles.navChevronButton,
+          chevronIcon: styles.navChevronIcon,
+        }}
+      />
+      {fabricNavGroups.length > 0 && fabricNavGroups[0].links.length === 0 &&
+        <span>No links to show.</span>
       }
     </Stack>
   );
