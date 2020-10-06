@@ -4,9 +4,7 @@
 
 SharePoint Framework custom web part which provides page-level navigation with the links stored in a SharePoint list that is provisioned during app installation. Supports up to 4 levels of link hierarchy.
 
-![Page Navigation View Mode](./images/page-nav-viewmode.png)
-![Page Navigation Edit Mode](./images/page-nav-editmode.png)
-![Page Navigation Setup Mode](./images/page-nav-setupmode.png)
+![Page Navigation Overview Screenshot](./images/page-nav-overview.png)
 
 ## Used SharePoint Framework Version
 
