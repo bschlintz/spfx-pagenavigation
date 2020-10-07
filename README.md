@@ -1,13 +1,23 @@
 # Page Navigation Web Part
-
 ## Summary
-
-SharePoint Framework custom web part which provides page-level navigation with the links stored in a SharePoint list that is provisioned during app installation. Supports up to 4 levels of link hierarchy.
+SharePoint Framework custom web part which provides page-level navigation with the links stored in a SharePoint list that is provisioned during app installation. 
 
 ![Page Navigation Overview Screenshot](./images/page-nav-overview.png)
 
-## Used SharePoint Framework Version
+## Features
+- Up to 4 levels of hierarchical links.
+- Navigation editor to add, edit, remove, reorder, promote, and demote links.
+- Data stored in a SharePoint list named `Page Navigation` which is provisioned on the site during app installation.
+- `Edit` button on the web part is security trimmed to users who have permission to edit items in the `Page Navigation` list.
+- 1:1 relationship between pages and list items in the `Page Navigation` list.
+  - Links are stored as JSON in the `NavigationData` field.
+  - Relationship between list item and page is established through the `PageUrl` field containing the server-relative path.
+  - List item `Title` field is displayed in the web part as the primary heading.
+  - __One__ `Page Navigation` web part is allowed per page.
 
+
+
+### Used SharePoint Framework Version
 ![version](https://img.shields.io/badge/version-1.11-green.svg)
 
 ## Setup Instructions
@@ -22,23 +32,14 @@ SharePoint Framework custom web part which provides page-level navigation with t
 ### Site Installation
 1. Click 'Add an app' on your target site.
 1. Click on the `Page Navigation` app to install it.
-1. Navigate to a page on the site where you'd like to add the web part, click `Edit`.
-1. Add the web part named `Page Navigation`.
+1. Navigate to a page on the site where you'd like to add the web part, click `Edit` to modify the page.
+1. Add the web part named `Page Navigation` to the desired section.
+   <br>__Tip:__ Use a narrow column such as the [vertical section](https://support.microsoft.com/en-us/office/add-sections-and-columns-on-a-sharepoint-modern-page-fc491eb4-f733-4825-8fe2-e1ed80bd0899).
 1. Save page.
-1. Click `Enable Page Navigation` to provision the SharePoint list item that will store the links for the current page.
+1. Within the web part, click `Enable Page Navigation`. This step will create the list item in the `Page Navigation` list that will store the links for the page.
 1. Click `Edit` next to the Page Navigation heading to begin adding links.
-1. Click `Save` when finished adding links.
-
-## Features
-
-- Up to 4 levels of hierarchical links.
-- All data is stored in a SharePoint list titled `Page Navigation` which is provisioned during app installation.
-- __One__ `Page Navigation` web part is supported per page.
-- 1:1 relationship between pages and SharePoint list items in the `Page Navigation` list on the site.
-  - Links are stored as JSON in the `NavigationData` field.
-  - Relationship between list item and page is established through the `PageUrl` field containing the server-relative path.
-  - List item `Title` field is displayed in the web part as the primary heading.
-- `Edit` button on web part is security trimmed to users who have permission to edit items in the `Page Navigation` list.
+1. Click `Add Link` to add your first link.
+1. Click `Save` on the web part when finished adding links.
 
 ## Version history
 
