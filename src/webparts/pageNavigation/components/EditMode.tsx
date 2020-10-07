@@ -47,7 +47,7 @@ const EditMode: React.FC<IEditPanelProps> = ({ navTitle, navLinks, onSave, onCan
 
   return (
     <Stack className={styles.navEditOuterContainer} tokens={{ childrenGap: 10 }}>
-      <TextField styles={{field: styles.navEditPageNavField}} placeholder="Page Navigation" value={localNavTitle} onChange={onNavTitleChange} />
+      <TextField styles={{field: styles.navEditPageNavField}} placeholder="Page Navigation" value={localNavTitle} onChange={onNavTitleChange} maxLength={255} />
       <NavEditor navLinks={localNavLinks} onNavLinksChange={onNavLinksChange}/>
       <Stack horizontal horizontalAlign="end" tokens={{childrenGap: 10 }}>
         <DefaultButton disabled={isSaving} onClick={onCancel}>Cancel</DefaultButton>

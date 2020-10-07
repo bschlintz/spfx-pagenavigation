@@ -15,10 +15,23 @@ export interface INavLinkModalProps {
   onCancel: () => void;
   onSave: (newOrUpdatedNavLink: PageNavLink) => void;
 }
+const INVALID_URL_MESSAGE = "Invalid: URL must start with /, http://, or https://";
 
 const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, onSave, onCancel }) => {
   const [ hasChanges, setHasChanges ] = useState<boolean>(false);
   const [ localNavLink, setLocalNavLink ] = useState<PageNavLink>(navLink);
+  const [ urlValidationError, setUrlValidationError ] = useState<string>(null);
+
+  const isValidUrl = (url: string): boolean => {
+    try {
+      if (url.startsWith('/')) return true;
+      if (url.startsWith('https://')) return true;
+      if (url.startsWith('http://')) return true;
+    }
+    catch {
+      return false;
+    }
+  };
 
   const onTitleChange = (event: any, newValue: string) => {
     setLocalNavLink({
@@ -33,6 +46,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       ...localNavLink,
       url: newValue
     });
+    setUrlValidationError(isValidUrl(newValue) ? null: INVALID_URL_MESSAGE);
     setHasChanges(true);
   };
 
@@ -73,7 +87,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       {localNavLink && <>
         <Stack tokens={{ childrenGap: 10 }}>
           <TextField label="Title" value={localNavLink.title} onChange={onTitleChange} />
-          <TextField label="URL" value={localNavLink.url} onChange={onUrlChange} />
+          <TextField label="URL" value={localNavLink.url} onChange={onUrlChange} errorMessage={urlValidationError} />
           <Toggle
             label="Open In New Tab"
             checked={typeof(localNavLink.newTab) === "undefined" ? false : localNavLink.newTab}
@@ -88,7 +102,12 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
           )}
           <Stack horizontal horizontalAlign="end" tokens={{ padding: '10px 0 0 0', childrenGap: 10 }}>
             <DefaultButton onClick={onCancel}>Cancel</DefaultButton>
-            <PrimaryButton disabled={!hasChanges || !localNavLink.title || !localNavLink.url} onClick={onClickSave}>Save</PrimaryButton>
+            {/* Can save when
+              1) there are changes
+              2) the title and url fields are not blank
+              3) the url field is a valid http URL
+            */}
+            <PrimaryButton disabled={!hasChanges || !localNavLink.title || !localNavLink.url || !!urlValidationError} onClick={onClickSave}>Save</PrimaryButton>
           </Stack>
         </Stack>
       </>}
