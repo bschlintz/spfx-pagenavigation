@@ -96,7 +96,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
           {localNavLink.children && (
             <Toggle
               label="Always Expand Children"
-              checked={typeof(localNavLink.childrenExpanded) === "undefined" ? false : localNavLink.childrenExpanded}
+              checked={typeof(localNavLink.childrenExpanded) === "undefined" ? true : localNavLink.childrenExpanded}
               onChange={onExpandChildrenChange}
             />
           )}
