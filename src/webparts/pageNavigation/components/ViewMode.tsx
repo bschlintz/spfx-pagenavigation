@@ -50,6 +50,7 @@ const ViewMode: React.FC<IPageNavigationProps> = ({ navTitle, navLinks, service,
       </SecurityTrimmedControl>
       <Nav
         groups={fabricNavGroups}
+        className={styles.navRoot}
         styles={{
           group: styles.navGroup,
           groupContent: styles.navGroupContent,

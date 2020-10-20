@@ -9,6 +9,9 @@ $scroll_area_max_height: 450px;
   }
 
   /* View Mode Styles */
+  .navRoot {
+    overflow-y: visible;
+  }
   .navGroup > button {
     font-size: 24px;
   }
