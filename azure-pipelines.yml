@@ -120,7 +120,7 @@ stages:
                   m365 login --authType certificate --certificateFile "$($env:Agent.WorkFolder)\_temp\$($env:APP_CERT_NAME)" --thumbprint $env:APP_CERT_THUMBPRINT --password $env:APP_CERT_PASSWORD --appId $env:APP_ID --tenant $env:TENANT_ID
                   
                   # Upload app package
-                  $added = (m365 spo app add --filePath "$($env:System.ArtifactsDirectory)/ClientSideSolutions/$($env:spfx_package_name)" --appCatalogUrl $env:site_url_dev --scope sitecollection --overwrite -o json | ConvertFrom-Json)
+                  $added = (m365 spo app add --filePath "$($env:System.ArtifactsDirectory)\ClientSideSolutions\$($env:spfx_package_name)" --appCatalogUrl $env:site_url_dev --scope sitecollection --overwrite -o json | ConvertFrom-Json)
                   
                   # Deploy app
                   m365 spo app deploy --name $env:spfx_package_name --appCatalogUrl $env:site_url_dev --scope sitecollection
