@@ -108,7 +108,7 @@ stages:
             - script: sudo npm install --global @pnp/cli-microsoft365
               displayName: Install Microsoft365 CLI
 
-            - script: m365 login $(site_url_dev) --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+            - script: set & m365 login $(site_url_dev) --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
               displayName: Connect to SPO Tenant
               env:
                 OFFICE365CLI_AADAPPID: $(TENANT_ID)
