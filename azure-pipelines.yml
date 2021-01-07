@@ -11,22 +11,22 @@ variables:
     value: '10.x'
 
   - name: spfx_package_name
-    value: page-navigation.sppkg
+    value: 'page-navigation.sppkg'
 
   - name: site_url_dev
-    value: $[SPO_BASE_URL]/sites/PageNavDev
+    value: '$(SPO_BASE_URL)/sites/PageNavDev'
 
   - name: site_url_test
-    value: $[SPO_BASE_URL]/sites/PageNavTest
+    value: '$(SPO_BASE_URL)/sites/PageNavTest'
 
   - name: site_url_prod
-    value: $[SPO_BASE_URL]/sites/PageNavProd
+    value: '$(SPO_BASE_URL)/sites/PageNavProd'
   
   - name: OFFICE365CLI_TENANT
-    value: $(TENANT_ID)
+    value: '$(TENANT_ID)'
 
   - name: OFFICE365CLI_AADAPPID
-    value: $(APP_ID)
+    value: '$(APP_ID)'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -119,7 +119,7 @@ stages:
       ##########################################
       ## upload *.sppkg to the target app catalog
       ##########################################
-      - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
+      - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
         displayName: Upload SharePoint package to Site Collection App Catalog
 
       ##########################################
