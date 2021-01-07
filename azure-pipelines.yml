@@ -87,12 +87,13 @@ stages:
           deploy:
             steps:
             - task: DownloadSecureFile@1
-              displayName: 'Download CA certificate'
+              displayName: 'Download app certificate'
               name: app_cert
               inputs:
                 secureFile: $(APP_CERT_NAME)
 
             - task: DownloadBuildArtifacts@0
+              displayName: 'Download SPFx package'
               inputs:
                 buildType: 'current'
                 downloadType: 'single'
@@ -108,11 +109,22 @@ stages:
             - script: sudo npm install --global @pnp/cli-microsoft365
               displayName: Install Microsoft365 CLI
 
-            - script: m365 login --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD) --appId $(APP_ID) --tenant $(TENANT_ID)
-              displayName: Connect to SPO tenant
-
-            - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl $(site_url_dev) --scope sitecollection --overwrite
-              displayName: Upload app package
-
-            - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope sitecollection
-              displayName: Deploy app package
+            - task: PowerShell@2
+              displayName: 'Connect, upload, deploy and install app'
+              inputs:
+                targetType: 'inline'
+                pwsh: true
+                script: |
+                
+                  # Connect to tenant
+                  m365 login --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD) --appId $(APP_ID) --tenant $(TENANT_ID)
+                  
+                  # Upload app package
+                  $added = (m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl $(site_url_dev) --scope sitecollection --overwrite -o json | ConvertFrom-Json)
+                  
+                  # Deploy app
+                  m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope sitecollection
+                  
+                  # Install or upgrade app
+                  try { m365 spo app install --id $added.UniqueId --siteUrl $(site_url_dev) --scope sitecollection }
+                  catch { m365 spo app upgrade --id $added.UniqueId --siteUrl $(site_url_dev) --scope sitecollection }
