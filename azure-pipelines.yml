@@ -108,15 +108,12 @@ stages:
             - script: sudo npm install --global @pnp/cli-microsoft365
               displayName: Install Microsoft365 CLI
 
-            - script: set & m365 login $(site_url_dev) --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+            - script: m365 login --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
               displayName: Connect to SPO Tenant
               env:
                 OFFICE365CLI_AADAPPID: $(TENANT_ID)
                 OFFICE365CLI_TENANT: $(APP_ID)
 
             - script: |
-                m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
-                m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
-              env:
-                OFFICE365CLI_AADAPPID: $(TENANT_ID)
-                OFFICE365CLI_TENANT: $(APP_ID)
+                m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl $(site_url_dev) --scope sitecollection --overwrite
+                m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope sitecollection
