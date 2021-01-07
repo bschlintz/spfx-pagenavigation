@@ -24,12 +24,6 @@ variables:
 
   - name: site_url_prod
     value: '$(SPO_BASE_URL)/sites/PageNavProd'
-  
-  - name: OFFICE365CLI_TENANT
-    value: '$(TENANT_ID)'
-
-  - name: OFFICE365CLI_AADAPPID
-    value: '$(APP_ID)'
 
 stages:
 - stage: Build
@@ -114,11 +108,10 @@ stages:
             - script: sudo npm install --global @pnp/cli-microsoft365
               displayName: Install Microsoft365 CLI
 
-            - script: m365 login '$(site_url_dev)' --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
-              displayName: Login to Office365
-
-            - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
-              displayName: Upload SharePoint package to Site Collection App Catalog
-
-            - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
-              displayName: Deploy SharePoint package
+            - script: |
+                m365 login '$(site_url_dev)' --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+                m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
+                m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
+              env:
+                CLIMICROSOFT365_AADAPPID: '$(TENANT_ID)'
+                CLIMICROSOFT365_TENANT: '$(APP_ID)'
