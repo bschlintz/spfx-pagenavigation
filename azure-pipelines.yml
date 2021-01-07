@@ -23,10 +23,10 @@ variables:
     value: $[SPO_BASE_URL]/sites/PageNavProd
   
   - name: OFFICE365CLI_TENANT
-    value: $[TENANT_ID]
+    value: $(TENANT_ID)
 
   - name: OFFICE365CLI_AADAPPID
-    value: $[APP_ID]
+    value: $(APP_ID)
 
 pool:
   vmImage: 'ubuntu-latest'
