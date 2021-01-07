@@ -106,17 +106,17 @@ stages:
       ##########################################
       ## login to Office 365 CLI
       ##########################################
-      - script: m365 login $(site_url_dev) --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+      - script: m365 login '$(site_url_dev)' --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
         displayName: Login to Office365
 
       ##########################################
       ## upload *.sppkg to the target app catalog
       ##########################################
-      - script: m365 spo app add --filePath $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope site --overwrite
+      - script: m365 spo app add --filePath $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope site --overwrite
         displayName: Upload SharePoint package to Site Collection App Catalog
 
       ##########################################
       ##deploy the package
       ##########################################
-      - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope site
+      - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope site
         displayName: Deploy SharePoint package
