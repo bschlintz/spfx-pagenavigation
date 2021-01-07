@@ -25,18 +25,6 @@ variables:
   - name: site_url_prod
     value: '$(SPO_BASE_URL)/sites/PageNavProd'
 
-  - name: OFFICE365CLI_AADAPPID
-    value: $(APP_ID)
-  
-  - name: CLIMICROSOFT365_AADAPPID
-    value: $(APP_ID)
-  
-  - name: OFFICE365CLI_TENANT
-    value: $(TENANT_ID)
-    
-  - name: CLIMICROSOFT365_TENANT
-    value: $(TENANT_ID)
-
 stages:
 - stage: Build
   jobs:
@@ -120,7 +108,7 @@ stages:
             - script: sudo npm install --global @pnp/cli-microsoft365
               displayName: Install Microsoft365 CLI
 
-            - script: m365 login --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+            - script: m365 login --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD) --appId $(APP_ID) --tenant $(TENANT_ID)
               displayName: Connect to SPO tenant
 
             - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl $(site_url_dev) --scope sitecollection --overwrite
