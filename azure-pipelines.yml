@@ -88,6 +88,13 @@ stages:
         inputs:
           secureFile: $(APP_CERT_NAME)
 
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'ClientSideSolutions'
+          downloadPath: '$(System.ArtifactsDirectory)'      
+
       ##########################################
       ## specify which node version to use
       ##########################################
@@ -112,7 +119,7 @@ stages:
       ##########################################
       ## upload *.sppkg to the target app catalog
       ##########################################
-      - script: m365 spo app add --filePath $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
+      - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
         displayName: Upload SharePoint package to Site Collection App Catalog
 
       ##########################################
