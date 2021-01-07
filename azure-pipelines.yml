@@ -112,11 +112,11 @@ stages:
               displayName: Connect to SPO Tenant
               env:
                 OFFICE365CLI_AADAPPID: $(TENANT_ID)
-                OFFICE365CLI_TENANT: $(APP_ID)'
+                OFFICE365CLI_TENANT: $(APP_ID)
 
             - script: |
                 m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
                 m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
               env:
                 OFFICE365CLI_AADAPPID: $(TENANT_ID)
-                OFFICE365CLI_TENANT: $(APP_ID)'
+                OFFICE365CLI_TENANT: $(APP_ID)
