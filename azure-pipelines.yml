@@ -4,47 +4,119 @@ trigger:
       - master
   batch: true
 
+variables:
+  - group: ConnectionDetails
+ 
+  - name: node_version
+    value: '10.x'
+
+  - name: spfx_package_name
+    value: page-navigation.sppkg
+
+  - name: site_url_dev
+    value: $[SPO_BASE_URL]/sites/PageNavDev
+
+  - name: site_url_test
+    value: $[SPO_BASE_URL]/sites/PageNavTest
+
+  - name: site_url_prod
+    value: $[SPO_BASE_URL]/sites/PageNavProd
+  
+  - name: OFFICE365CLI_TENANT
+    value: $[TENANT_ID]
+
+  - name: OFFICE365CLI_AADAPPID
+    value: $[APP_ID]
+
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '10.x'
-  displayName: 'Install Node.js'
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '10.x'
+      displayName: 'Install Node.js'
 
-- script: |
-    npm install
-  displayName: 'npm install'
+    - script: |
+        npm install
+      displayName: 'npm install'
 
-- task: gulp@0
-  displayName: 'gulp bundle'
-  inputs:
-    gulpFile: 'gulpfile.js'
-    targets: 'bundle'
-    arguments: '--ship'
-    workingDirectory: '/'
-    gulpjs: 'node_modules/gulp/bin/gulp.js'
-    enableCodeCoverage: false    
+    - task: gulp@0
+      displayName: 'gulp bundle'
+      inputs:
+        gulpFile: 'gulpfile.js'
+        targets: 'bundle'
+        arguments: '--ship'
+        workingDirectory: '/'
+        gulpjs: 'node_modules/gulp/bin/gulp.js'
+        enableCodeCoverage: false    
 
-- task: gulp@0
-  displayName: 'gulp package-solution'
-  inputs:
-    gulpFile: 'gulpfile.js'
-    targets: 'package-solution'
-    arguments: '--ship'
-    workingDirectory: '/'
-    gulpjs: 'node_modules/gulp/bin/gulp.js'
-    enableCodeCoverage: false
+    - task: gulp@0
+      displayName: 'gulp package-solution'
+      inputs:
+        gulpFile: 'gulpfile.js'
+        targets: 'package-solution'
+        arguments: '--ship'
+        workingDirectory: '/'
+        gulpjs: 'node_modules/gulp/bin/gulp.js'
+        enableCodeCoverage: false
 
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: 'sharepoint/solution'
-    Contents: '*'
-    TargetFolder: '$(build.artifactstagingdirectory)/drop'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: 'sharepoint/solution'
+        Contents: $(spfx_package_name)
+        TargetFolder: '$(build.artifactstagingdirectory)/drop'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/drop'
-    ArtifactName: 'ClientSideSolutions'
-    publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/drop'
+        ArtifactName: 'ClientSideSolutions'
+        publishLocation: 'Container'
+
+- stage: dev_deploy
+  displayName: 'DEV: Deploy'
+  jobs:
+    - job: DeployJob
+      steps:
+      - task: DownloadSecureFile@1
+        displayName: 'Download CA certificate'
+        name: app_cert
+        inputs:
+          secureFile: $(APP_CERT_NAME)
+
+      ##########################################
+      ## specify which node version to use
+      ##########################################
+      - task: UseNode@1
+        displayName: Set to Node.js $(node_version)
+        inputs:
+          version: $(node_version)
+        condition: ne('$(node_version)', '')
+
+      ##########################################
+      ## install Office 365 CLI
+      ##########################################
+      - script: sudo npm install --global @pnp/cli-microsoft365
+        displayName: Install Microsoft365 CLI
+
+      ##########################################
+      ## login to Office 365 CLI
+      ##########################################
+      - script: m365 login $(site_url_dev) --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+        displayName: Login to Office365
+
+      ##########################################
+      ## upload *.sppkg to the target app catalog
+      ##########################################
+      - script: m365 spo app add --filePath $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope site --overwrite
+        displayName: Upload SharePoint package to Site Collection App Catalog
+
+      ##########################################
+      ##deploy the package
+      ##########################################
+      - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl $(site_url_dev) --scope site
+        displayName: Deploy SharePoint package
