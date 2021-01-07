@@ -109,9 +109,9 @@ stages:
               displayName: Install Microsoft365 CLI
 
             - script: |
-                m365 login '$(site_url_dev)' --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+                m365 login $(site_url_dev) --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
                 m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
                 m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
               env:
-                CLIMICROSOFT365_AADAPPID: '$(TENANT_ID)'
-                CLIMICROSOFT365_TENANT: '$(APP_ID)'
+                OFFICE365CLI_AADAPPID: '$(TENANT_ID)'
+                OFFICE365CLI_TENANT: '$(APP_ID)'
