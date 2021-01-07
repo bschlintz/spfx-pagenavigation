@@ -112,11 +112,11 @@ stages:
       ##########################################
       ## upload *.sppkg to the target app catalog
       ##########################################
-      - script: m365 spo app add --filePath $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope site --overwrite
+      - script: m365 spo app add --filePath $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
         displayName: Upload SharePoint package to Site Collection App Catalog
 
       ##########################################
       ##deploy the package
       ##########################################
-      - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope site
+      - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
         displayName: Deploy SharePoint package
