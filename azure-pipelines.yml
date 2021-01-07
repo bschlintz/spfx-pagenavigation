@@ -9,6 +9,9 @@ variables:
  
   - name: node_version
     value: '10.x'
+  
+  - name: vmImageName
+    value: 'ubuntu-latest'
 
   - name: spfx_package_name
     value: 'page-navigation.sppkg'
@@ -28,13 +31,12 @@ variables:
   - name: OFFICE365CLI_AADAPPID
     value: '$(APP_ID)'
 
-pool:
-  vmImage: 'ubuntu-latest'
-
 stages:
 - stage: Build
   jobs:
   - job: BuildJob
+    pool:
+      vmImage: $(vmImageName)
     steps:
     - task: NodeTool@0
       inputs:
@@ -79,51 +81,44 @@ stages:
 
 - stage: dev_deploy
   displayName: 'DEV: Deploy'
+  dependsOn: Build
+  condition: succeeded()
   jobs:
-    - job: DeployJob
-      steps:
-      - task: DownloadSecureFile@1
-        displayName: 'Download CA certificate'
-        name: app_cert
-        inputs:
-          secureFile: $(APP_CERT_NAME)
+    - deployment: DeploymentJob
+      pool:
+        vmImage: $(vmImageName)
+      environment: 'page-nav-dev'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - task: DownloadSecureFile@1
+              displayName: 'Download CA certificate'
+              name: app_cert
+              inputs:
+                secureFile: $(APP_CERT_NAME)
 
-      - task: DownloadBuildArtifacts@0
-        inputs:
-          buildType: 'current'
-          downloadType: 'single'
-          artifactName: 'ClientSideSolutions'
-          downloadPath: '$(System.ArtifactsDirectory)'      
+            - task: DownloadBuildArtifacts@0
+              inputs:
+                buildType: 'current'
+                downloadType: 'single'
+                artifactName: 'ClientSideSolutions'
+                downloadPath: '$(System.ArtifactsDirectory)'     
+ 
+            - task: UseNode@1
+              displayName: Set to Node.js $(node_version)
+              inputs:
+                version: $(node_version)
+              condition: ne('$(node_version)', '')
 
-      ##########################################
-      ## specify which node version to use
-      ##########################################
-      - task: UseNode@1
-        displayName: Set to Node.js $(node_version)
-        inputs:
-          version: $(node_version)
-        condition: ne('$(node_version)', '')
+            - script: sudo npm install --global @pnp/cli-microsoft365
+              displayName: Install Microsoft365 CLI
 
-      ##########################################
-      ## install Office 365 CLI
-      ##########################################
-      - script: sudo npm install --global @pnp/cli-microsoft365
-        displayName: Install Microsoft365 CLI
+            - script: m365 login '$(site_url_dev)' --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
+              displayName: Login to Office365
 
-      ##########################################
-      ## login to Office 365 CLI
-      ##########################################
-      - script: m365 login '$(site_url_dev)' --authType certificate --certificateFile $(app_cert.secureFilePath) --thumbprint $(APP_CERT_THUMBPRINT) --password $(APP_CERT_PASSWORD)
-        displayName: Login to Office365
+            - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
+              displayName: Upload SharePoint package to Site Collection App Catalog
 
-      ##########################################
-      ## upload *.sppkg to the target app catalog
-      ##########################################
-      - script: m365 spo app add --filePath '$(System.ArtifactsDirectory)/ClientSideSolutions/$(spfx_package_name)' --appCatalogUrl '$(site_url_dev)' --scope sitecollection --overwrite
-        displayName: Upload SharePoint package to Site Collection App Catalog
-
-      ##########################################
-      ##deploy the package
-      ##########################################
-      - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
-        displayName: Deploy SharePoint package
+            - script: m365 spo app deploy --name $(spfx_package_name) --appCatalogUrl '$(site_url_dev)' --scope sitecollection
+              displayName: Deploy SharePoint package
