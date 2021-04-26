@@ -5,7 +5,7 @@ SharePoint Framework custom web part which provides page-level navigation with t
 ![Page Navigation Overview Screenshot](./images/page-nav-overview.png)
 
 ## Features
-- Up to 4 levels of hierarchical links.
+- Up to 4 levels of hierarchical links. A link without a specified URL will function as a heading.
 - Navigation editor to add, edit, remove, reorder, promote, and demote links.
 - Data stored in a SharePoint list named `Page Navigation` which is provisioned on the site during app installation.
 - `Edit` button on the web part is security trimmed to users who have permission to edit items in the `Page Navigation` list.
@@ -45,6 +45,7 @@ SharePoint Framework custom web part which provides page-level navigation with t
 
 Version|Date|Comments
 -------|----|--------
+1.1.0|April 26, 2021|Add support for headings
 1.0.1|October 20, 2020|Minor bug fixes
 1.0.0|October 7, 2020|Initial release
 

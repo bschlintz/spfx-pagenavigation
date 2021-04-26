@@ -46,7 +46,7 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       ...localNavLink,
       url: newValue
     });
-    setUrlValidationError(isValidUrl(newValue) ? null: INVALID_URL_MESSAGE);
+    setUrlValidationError(!newValue || isValidUrl(newValue) ? null: INVALID_URL_MESSAGE);
     setHasChanges(true);
   };
 
@@ -87,11 +87,12 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
       {localNavLink && <>
         <Stack tokens={{ childrenGap: 10 }}>
           <TextField label="Title" value={localNavLink.title} onChange={onTitleChange} />
-          <TextField label="URL" value={localNavLink.url} onChange={onUrlChange} errorMessage={urlValidationError} />
+          <TextField label="URL" value={localNavLink.url} onChange={onUrlChange} errorMessage={urlValidationError} placeholder="Specify a URL or leave blank for heading" />
           <Toggle
             label="Open In New Tab"
             checked={typeof(localNavLink.newTab) === "undefined" ? false : localNavLink.newTab}
             onChange={onNewTabChange}
+            disabled={!localNavLink.url}
           />
           {localNavLink.children && (
             <Toggle
@@ -104,10 +105,10 @@ const NavLinkModal: React.FC<INavLinkModalProps> = ({ navLink, isOpen, isAdd, on
             <DefaultButton onClick={onCancel}>Cancel</DefaultButton>
             {/* Can save when
               1) there are changes
-              2) the title and url fields are not blank
-              3) the url field is a valid http URL
+              2) the title is not blank
+              3) if the url field is not blank, it is a valid http URL
             */}
-            <PrimaryButton disabled={!hasChanges || !localNavLink.title || !localNavLink.url || !!urlValidationError} onClick={onClickSave}>Save</PrimaryButton>
+            <PrimaryButton disabled={!hasChanges || !localNavLink.title || (localNavLink.url && !!urlValidationError)} onClick={onClickSave}>Save</PrimaryButton>
           </Stack>
         </Stack>
       </>}
