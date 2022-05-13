@@ -3,7 +3,7 @@
   "solution": {
     "name": "Page Navigation Web Part",
     "id": "840975cd-1c33-4576-a145-8c5e4d6c5b7c",
-    "version": "1.1.0.0",
+    "version": "1.2.0.0",
     "includeClientSideAssets": true,
     "isDomainIsolated": false,
     "skipFeatureDeployment": false,
