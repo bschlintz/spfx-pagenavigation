@@ -29,6 +29,17 @@
       "privacyUrl": "",
       "termsOfUseUrl": "",
       "mpnId": ""
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "page-navigation description"
+      },
+      "longDescription": {
+        "default": "page-navigation description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
     }
   },
   "paths": {
