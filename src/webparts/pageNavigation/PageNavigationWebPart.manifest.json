@@ -21,6 +21,7 @@
     "description": { "default": "A web part that adds a customizable navigation menu to your page. Only one Page Navigation web part is supported per page." },
     "officeFabricIconFontName": "SecondaryNav",
     "properties": {
+      "overrideEnabled": false
     }
   }]
 }
